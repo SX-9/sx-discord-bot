@@ -1,2 +1,2 @@
 # sx-discord-bot
-Nothing To See Here
+This repository is testers only please dont edit it
