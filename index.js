@@ -2,7 +2,7 @@
 //node index.js
 
 const bot_token = "ODg5Mzg0MjE5Njc4MjMyNjA2.YUgdmQ.YKf0a_tsepvDPP0Fk67MPiAw2_o";
-const owner_main_id = '853158265466257448';
+const owner_main_id = '882595027132493864';
 const owner_alt_id = '916880217329516604';
 const log_channel_id = '963713518966808587';
 const status_text = 'sx!help | sx9.is-a.dev';
