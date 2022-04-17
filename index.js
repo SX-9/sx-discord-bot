@@ -326,6 +326,7 @@ if (msg.author.bot) return;
   if (msg.content.startsWith(`${bot_prefix}login`)) {
     let new_token = msg.content.slice(bot_prefix.length + 6);
     if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
+      msg.delete();
       msg.react('889165118104023042');
       setTimeout(() => {
         client.destroy();
