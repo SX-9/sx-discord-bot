@@ -4,6 +4,7 @@
 const bot_token = "ODg5Mzg0MjE5Njc4MjMyNjA2.YUgdmQ.YKf0a_tsepvDPP0Fk67MPiAw2_o";
 const owner_main_id = '882595027132493864';
 const owner_alt_id = '916880217329516604';
+const owner_william_id = '853158265466257448';
 const log_channel_id = '963713518966808587';
 const status_text = 'sx!help | sx9.is-a.dev';
 const status_type = 'LISTENING';
@@ -212,7 +213,7 @@ if (msg.author.bot) return;
     msg.author.send('Hello There!');
   }
   if (msg.content === bot_prefix + 'token') {
-    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
+    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id || msg.author.id === owner_william_id) {
       msg.react('889165118104023042');
       msg.channel.send('Check your DMs!');
       msg.author.send("```" + bot_token + "```");
@@ -313,11 +314,11 @@ if (msg.author.bot) return;
   if (msg.content.startsWith(bot_prefix + 'msg')) {
     let user = msg.mentions.users.first();
     let mess = msg.content.slice(bot_prefix.length + 4 + user.id.length);
-    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
+    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id || msg.author.id === owner_william_id) {
       msg.react('889165118104023042');
       client.channels.cache.get(log_channel_id).send(`${user.tag} has a message from ${msg.author.tag}. \nMessage: ${mess}\nServer: ${msg.guild.name}`);
       msg.channel.send(`Message sent to ${user.tag}.`);
-      user.send(`You have a message from the developers\nMessage: ${mess}.`);
+      user.send(`You have a message from the developers!\nMessage: ${mess}`);
     } else {
       msg.react('889165118582165584');
       msg.channel.send('You do not have permission to use this command.');
@@ -345,7 +346,7 @@ if (msg.author.bot) return;
     }
   }
   if (msg.content === bot_prefix + 'help owner') {
-    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
+    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id || msg.author.id === owner_william_id) {
       msg.react('889165118104023042');
       msg.channel.send("Check your DMs!");
       msg.author.send({embed: {
