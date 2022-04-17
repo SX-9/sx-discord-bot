@@ -317,31 +317,55 @@ if (msg.author.bot) return;
       msg.react('889165118104023042');
       client.channels.cache.get(log_channel_id).send(`${user.tag} has a message from ${msg.author.tag}. \nMessage: ${mess}\nServer: ${msg.guild.name}`);
       msg.channel.send(`Message sent to ${user.tag}.`);
-      user.send(`You have a message from the developers!\nMessage: ${mess}`);
+      user.send(`You have a message from the developers\nMessage: ${mess}.`);
     } else {
       msg.react('889165118582165584');
       msg.channel.send('You do not have permission to use this command.');
     }
   }
-  if (msg.content.startsWith(`${bot_prefix}login`)) {
-    let new_token = msg.content.slice(bot_prefix.length + 6);
-    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
-      msg.delete();
-      msg.react('889165118104023042');
-      setTimeout(() => {
-        client.destroy();
-        client.login(new_token);
-      }, 3000);
+  if (msg.content.startsWith(bot_prefix + '8ball')) {
+    let arg = msg.content.slice(bot_prefix.length + 5);
+    let choices = ['It is certain.', 'It is decidedly so.', 'Without a doubt.', 'Yes - definitely.', 'You may rely on it.', 'As I see it, yes.', 'Most likely.', 'Outlook good.', 'Yes.', 'Signs point to yes.', 'Reply hazy, try again.', 'Ask again later.', 'Better not tell you now.', 'Cannot predict now.', 'Concentrate and ask again.', 'Don\'t count on it.', 'My reply is no.', 'My sources say no.', 'Outlook not so good.', 'Very doubtful.'];
+    let pick = choices[Math.floor(Math.random() * choices.length)];
+    msg.channel.send({embed: {
+      color: embed_color,
+      title: "Magic 8 Ball",
+      description: `${msg.author.tag} asked: ${arg}\n8ball: ${pick}`,
+      footer: {
+        text: "sx9.is-a.dev"
+      }
+    }});
+  }
+  if (msg.content === bot_prefix + 'cat') {
+    msg.channel.send({embed: {
+      color: embed_color,
+      title: "Cat Picture",
+      description: `Source: https://cataas.com/cat`,
+      image: {
+        url: "https://cataas.com/cat"
+      },
+      footer: {
+        text: "sx9.is-a.dev"
+      }
+    }});
+  }
+  if (msg.content.startsWith(bot_prefix + 'hug')) {
+    let user = msg.mentions.users.first();
+    msg.channel.send(`${msg.author.tag} hugged ${user.tag}, aww! (Stare at the gif below)`);
+    msg.channel.send('https://tenor.com/view/hugs-rickroll-gif-24588121')
+  }
+  if (msg.content.startsWith(bot_prefix + 'slap')) {
+    let user = msg.mentions.users.first();
+    msg.channel.send(`${user.username} has been slapped by ${msg.author.username}, oof!`);
+    msg.channel.send('https://tenor.com/view/abell46s-reface-batman-robin-bofetada-gif-18724899')
+  }
+  if (msg.content.startsWith(bot_prefix + 'rickroll')) {
+    let user = msg.mentions.users.first();
+    if (user === undefined) {
+      msg.channel.send("You need to mention someone to rickroll them. Since you didn't, I'll rickroll you later ;)");
     } else {
-      msg.react('889165118582165584');
-      msg.channel.send('You do not have permission to use this command.');
-    }
-    if (new_token === 'back') {
-      msg.react('889165118104023042');
-      setTimeout(() => {
-        client.destroy();
-        client.login(bot_token);
-      }, 3000);
+      user.send(`You recived a message from someone...\nMessage: ||Never Gonna Give You Up Never Gonna Let You Down Never Gonna Run Around And Desert You||`);
+      msg.channel.send('Rickroll sent to ' + user.tag);
     }
   }
   if (msg.content === bot_prefix + 'help owner') {
@@ -391,11 +415,6 @@ if (msg.author.bot) return;
             {
               name: bot_prefix + "msg <user> <message>",
               value: `Sends a message to a user.`,
-              inline: true
-            },
-            {
-              name: bot_prefix + "login <token>",
-              value: `Login to a new bot.`,
               inline: true
             },
           ],
@@ -479,6 +498,11 @@ if (msg.author.bot) return;
             inline: true
           },
           {
+            name: bot_prefix + "cat",
+            value: "Sends a random cat",
+            inline: true
+          },
+          {
             name: bot_prefix + "owner",
             value: "Sends a message saying if you are the owner or not",
             inline: true
@@ -496,6 +520,21 @@ if (msg.author.bot) return;
           {
             name: bot_prefix + "poll <question>",
             value: "Creates a yes or no poll",
+            inline: true
+          },
+          {
+            name: bot_prefix + "slap <user>",
+            value: "Slaps a user",
+            inline: true
+          },
+          {
+            name: bot_prefix + "hug <user>",
+            value: "Hugs a user",
+            inline: true
+          },
+          {
+            name: bot_prefix + "rickroll <user>",
+            value: "Rickrolls a user",
             inline: true
           },
         ],
