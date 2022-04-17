@@ -1,4 +1,4 @@
-# sx-discord-bot
-This repository is testers only please dont edit it
+# Rules
 
-William: alr
+1. This is a testers only rep dont give anyone access to see thus repo
+2. Dont commit changes unless its a bug fix or adding a feture
