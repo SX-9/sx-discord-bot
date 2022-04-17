@@ -337,17 +337,21 @@ if (msg.author.bot) return;
     }});
   }
   if (msg.content === bot_prefix + 'cat') {
-    msg.channel.send({embed: {
-      color: embed_color,
-      title: "Cat Picture",
-      description: `Source: https://cataas.com/cat`,
-      image: {
-        url: "https://cataas.com/cat"
-      },
-      footer: {
-        text: "sx9.is-a.dev"
-      }
-    }});
+    fetch('https://api.thecatapi.com/v1/images/search') 
+    .then(res => res.json())
+    .then(json => {
+      msg.channel.send({embed: {
+        color: embed_color,
+        title: "Cat",
+        description: json[0].url,
+        image: {
+          url: json[0].url
+        },
+        footer: {
+          text: "sx9.is-a.dev"
+        }
+      }});
+    });
   }
   if (msg.content.startsWith(bot_prefix + 'hug')) {
     let user = msg.mentions.users.first();
