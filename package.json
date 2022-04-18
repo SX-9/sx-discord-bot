@@ -1,13 +1,13 @@
 {
   "name": "sx-cat-assistant",
   "version": "1.0.0",
-  "description": "",
+  "description": "SX's 1st Bot",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "SX Spy Agent",
   "license": "ISC",
   "dependencies": {
     "discord.js": "^12.5.3",

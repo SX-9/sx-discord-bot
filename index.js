@@ -372,6 +372,18 @@ if (msg.author.bot) return;
       msg.channel.send('Rickroll sent to ' + user.tag);
     }
   }
+  if (msg.content.startsWith(bot_prefix + 'math')) {
+    let arg = msg.content.slice(bot_prefix.length + 5);
+    let result = eval(arg);
+    msg.channel.send({embed: {
+      color: embed_color,
+      title: "Math",
+      description: `${msg.author.tag} asked: ${arg}\nAnswer: ${result}`,
+      footer: {
+        text: "sx9.is-a.dev"
+      }
+    }});
+  }
   if (msg.content === bot_prefix + 'help owner') {
     if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
       msg.react('889165118104023042');
@@ -511,6 +523,11 @@ if (msg.author.bot) return;
             value: "Sends a message saying if you are the owner or not",
             inline: true
           }, 
+          {
+            name: bot_prefix + "math <math>",
+            value: "Sends the answer to a math question",
+            inline: true
+          },
           {
             name: bot_prefix + "rps <choice>",
             value: "Sends a rock paper scissors game",
