@@ -42,7 +42,23 @@ client.on('guildDelete', guild => {
 });
 
 client.on('message', msg => {
-if (msg.author.bot) return;
+  if (msg.author.bot) return;
+  if (!msg.guild.me.hasPermission('SEND_MESSAGES', 'EMBED_LINKS', 'ATTACH_FILES', 'READ_MESSAGE_HISTORY', 'USE_EXTERNAL_EMOJIS', 'ADD_REACTIONS')) {
+    msg.channel.send(`Error: I don't have the required permissions to run properly!\nMore info: ${bot_prefix}perms`);
+  }
+  if (msg.content === `${bot_prefix}perms`) {
+    msg.channel.send(`
+      I need the following permissions to run properly:
+      \`\`\`
+      SEND_MESSAGES
+      EMBED_LINKS
+      ATTACH_FILES
+      READ_MESSAGE_HISTORY
+      USE_EXTERNAL_EMOJIS
+      ADD_REACTIONS
+      \`\`\`
+    `);
+  }
   if (msg.content.startsWith(`${bot_prefix}userinfo`)) {
     const user = msg.mentions.users.first();
     if (!user) {
