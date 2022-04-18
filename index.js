@@ -258,69 +258,53 @@ if (msg.author.bot) return;
       msg.channel.send('You do not have permission to use this command.');
     }
   }
+  
   if (msg.content.startsWith(bot_prefix + 'rps')) {
-    let choices = ['Rock', 'Paper', 'Scissors'];
+    let choices = [':rock:', ':newspaper:', ':scissors:'];
     let pick = choices[Math.floor(Math.random() * choices.length)];
-    let arg = msg.content.slice(bot_prefix.length + 4);
-    msg.channel.send({embed: {
-        color: embed_color,
-        title: "RPS Game Results",
-        fields: [
-          {
-            name: "Your Choice",
-            value: arg,
-            inline: true
-          },
-          {
-            name: "Bot Choice",
-            value: pick,
-            inline: true
-           }
-        ],
-        timestamp: new Date(),
-        footer: {
-          text: "sx9.is-a.dev",
-        }
-    }});
-  }
-  if (msg.content.startsWith(bot_prefix + 'serverstats')) {
-    msg.channel.send({embed: {
-        color: embed_color,
-        title: "Server Stats",
-        fields: [
-          {
-            name: "Members",
-            value: msg.guild.memberCount,
-            inline: true
-          },
-          {
-            name: "Channels",
-            value: msg.guild.channels.cache.size,
-            inline: true
-          },
-          {
-            name: "Roles",
-            value: msg.guild.roles.cache.size,
-            inline: true
-          }
-        ],
-        timestamp: new Date(),
-        footer: {
-          text: "sx9.is-a.dev",
-        }
-    }});
-  }
-  if (msg.content.startsWith(bot_prefix + 'msg')) {
-    let user = msg.mentions.users.first();
-    let mess = msg.content.slice(bot_prefix.length + 4 + user.id.length);
-    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
-      msg.react('889165118104023042');
-      client.channels.cache.get(log_channel_id).send(`${user.tag} has a message from ${msg.author.tag}. \nMessage: ${mess}\nServer: ${msg.guild.name}`);
-      msg.channel.send(`Message sent to ${user.tag}.`);
-      user.send(`You have a message from the developers\nMessage: ${mess}.`);
+    let arg = msg.content.slice(bot_prefix.length + 4).toLocaleLowerCase();
+    let text = ''; 
+    if (arg === 'rock' || arg === 'r') {
+      arg = ':rock:';
+    } 
+    if (arg === 'paper' || arg === 'p') {
+      arg = ':newspaper:';
+    } 
+    if (arg === 'scissors' || arg === 's') {
+      arg = ':scissors:';
+    }
+    if (arg === ':rock:' && pick === ':scissors:' || arg === ':newspaper:' && pick === ':rock:' || arg === ':scissors:' && pick === ':newspaper:') {
+      text = 'You win!';
     } else {
-      msg.react('889165118582165584');
-      msg.channel.send('You do not have permission to use this command.');
+      text = 'You lose!'; 
+    }
+    if (arg === pick) {
+      text = 'Its a tie!';
+    }
+    if (arg !== ':rock:' && arg !== ':newspaper:' && arg !== ':scissors:') {
+      msg.channel.send('Valid choices are: ``rock``, ``paper``, ``scissors``.\nShortcuts are: ``r``, ``p``, and ``s``.');
+    } else {
+      msg.channel.send({embed: {
+          color: embed_color,
+          title: "RPS Game Results",
+          description: `You choose ${arg} and the bot choose ${pick}. ${text}`,
+          fields: [
+            {
+              name: "Players Choice",
+              value: arg,
+              inline: true
+            },
+            {
+              name: "Robots Choice",
+              value: pick,
+              inline: true
+            }
+          ],
+          timestamp: new Date(),
+          footer: {
+            text: "sx9.is-a.dev",
+          }
+      }});
     }
   }
   if (msg.content.startsWith(bot_prefix + '8ball')) {
