@@ -2,3 +2,4 @@
 node_modules
 .gitattributes
 package-lock.json
+database.json

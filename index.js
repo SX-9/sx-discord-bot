@@ -10,17 +10,33 @@ const status_type = 'LISTENING';
 const bot_prefix = `sx!`;
 const embed_color = '#00e1ff';
 const server_port = 3000;
+const cooldown_time = 5000;
 
 const Discord = require('discord.js');
 const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES"] });
 const express = require('express');
 const pinger = express();
 const fetch = require('node-fetch');
+const fs = require('fs');
+
+if (!fs.existsSync('./database.json')) {
+  console.log('Not found database.json, creating...');
+  fs.writeFileSync('./database.json', JSON.stringify({
+    "cmds_used": 0,
+    "page_views": 0,
+    "save_cmd": "sx!save <text>",
+  }));
+} else {
+  console.log('Loaded database.json');
+}
+const db = require('./database.json');
 
 pinger.get('/', (req, res) => {
+  db.page_views++;
   res.send(`
   Coded by SX-Spy-Agent#1377<br>
-  Website: <a href="https://sx9.is-a.dev">sx9.is-a.dev</a>
+  Website: <a href="https://sx9.is-a.dev">sx9.is-a.dev</a><br>
+  Page Views: ${db.page_views}<br>
   `);
 });
 pinger.listen(server_port, () => {
@@ -46,8 +62,18 @@ client.on('message', msg => {
   if (!msg.guild.me.hasPermission('SEND_MESSAGES', 'EMBED_LINKS', 'ATTACH_FILES', 'READ_MESSAGE_HISTORY', 'USE_EXTERNAL_EMOJIS', 'ADD_REACTIONS')) {
     msg.channel.send(`Error: I don't have the required permissions to run properly!\nMore info: ${bot_prefix}perms`);
   }
+  if (msg.content.startsWith(bot_prefix)) {
+    db.cmds_used++;
+    fs.writeFileSync('./database.json', JSON.stringify(db));
+  }
   if (msg.content === `${bot_prefix}perms`) {
     msg.channel.send('I need the following permissions to run properly:\n```SEND_MESSAGES\nEMBED_LINKS\nATTACH_FILES\nREAD_MESSAGE_HISTORY\nUSE_EXTERNAL_EMOJIS\nADD_REACTIONS```');
+  }
+  if (msg.content === `${bot_prefix}cmdsused`) {
+    msg.channel.send(`Total commands used: ${db.cmds_used}`);
+  }
+  if (msg.content === `${bot_prefix}vote`) {
+    msg.channel.send(`https://top.gg/bot/${client.user.id}/vote`);
   }
   if (msg.content.startsWith(`${bot_prefix}userinfo`)) {
     const user = msg.mentions.users.first();
@@ -365,14 +391,18 @@ client.on('message', msg => {
   if (msg.content.startsWith(bot_prefix + 'math')) {
     let arg = msg.content.slice(bot_prefix.length + 5);
     let result = eval(arg);
-    msg.channel.send({embed: {
-      color: embed_color,
-      title: "Math",
-      description: `${msg.author.tag} asked: ${arg}\nAnswer: ${result}`,
-      footer: {
-        text: "sx9.is-a.dev"
-      }
-    }});
+    if (result === undefined) {
+      msg.channel.send('Invalid input.');
+    } else {
+      msg.channel.send({embed: {
+        color: embed_color,
+        title: "Math",
+        description: `${msg.author.tag} asked: ${arg}\nAnswer: ${result}`,
+        footer: {
+          text: "sx9.is-a.dev"
+        }
+      }});
+    }
   }
   if (msg.content === bot_prefix + 'help owner') {
     if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
@@ -441,6 +471,11 @@ client.on('message', msg => {
         description: "Here are some commands I can help you with!",
         fields: [
           {
+            name: bot_prefix + "vote",
+            value: `Sends a link to the bot's top.gg page.`,
+            inline: true
+          },
+          {
             name: bot_prefix + "perms",
             value: `Sends a list of all the permissions the bot needs.`,
             inline: true
@@ -463,6 +498,11 @@ client.on('message', msg => {
           {
             name: bot_prefix + "links",
             value: `Sends a list of all the links the bot has.`,
+            inline: true
+          },
+          {
+            name: bot_prefix + "cmdsused",
+            value: `Sends a message with how many times a user uses me.`,
             inline: true
           },
           {
