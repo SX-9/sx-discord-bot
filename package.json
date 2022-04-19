@@ -1,14 +1,25 @@
 {
-  "name": "sx-cat-assistant",
+  "name": "sx-discord-bot",
   "version": "1.0.0",
-  "description": "SX's 1st Bot",
+  "description": "SX's 1st Discord Bot",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SX-9/sx-discord-bot.git"
+  },
+  "keywords": [
+    "discord"
+  ],
   "author": "SX Spy Agent",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SX-9/sx-discord-bot/issues"
+  },
+  "homepage": "https://github.com/SX-9/sx-discord-bot#readme",
   "dependencies": {
     "discord.js": "^12.5.3",
     "express": "^4.17.3",
