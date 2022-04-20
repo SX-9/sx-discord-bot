@@ -1,21 +1,13 @@
 //npm i discord.js@12.5.3 node-fetch@2.6.1 express
 //node index.js
 
-const owner_main_id = '882595027132493864';
-const owner_alt_id = '916880217329516604';
-const log_channel_id = '963713518966808587';
-const status_text = 'sx!help | sx9.is-a.dev';
-const status_type = 'LISTENING';
-const bot_prefix = `sx!`;
-const embed_color = '#00e1ff';
-const server_port = 3000;
-
 const Discord = require('discord.js');
 const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES"] });
 const express = require('express');
 const pinger = express();
 const fetch = require('node-fetch');
 const fs = require('fs');
+const os = require("os");
 
 if (!fs.existsSync('./database.json')) {
   console.log('Not found database.json, creating...');
@@ -30,15 +22,34 @@ if (!fs.existsSync('./database.json')) {
 if (!fs.existsSync('./secrets.json')) {
   console.log('Not found secrets.json, creating...');
   fs.writeFileSync('./secrets.json', JSON.stringify({
-    "token": "",
+    "bot_token": ""
   }));
-  console.log('Go to secrets.json and add your token there.');
+  console.log('Go to secrets.json and add your token and there.');
   process.exit();
 } else {
   console.log('Loaded secrets.json');
 }
 
+if (!fs.existsSync('./conf.json')) {
+  console.log('Not found conf.json, creating...');
+  fs.writeFileSync('./conf.json', JSON.stringify({
+    "bot_prefix": "sx!",
+    "log_channel_id": "963713518966808587",
+    "owner_main_id": '882595027132493864',
+    "owner_alt_id": '916880217329516604',
+    "status_text": 'sx!help | sx9.is-a.dev',
+    "status_type": 'LISTENING',
+    "embed_color": '#00e1ff',
+    "server_port": 3000,
+  }));
+  console.log('Go to conf.json and add your prefix, owner id, log channel id, status text, status type, embed color, and server port there.');
+  process.exit();
+} else {
+  console.log('Loaded conf.json');
+}
+
 const bot_token = require('./secrets.json').token;
+const { bot_prefix, owner_main_id, owner_alt_id, log_channel_id, status_text, status_type, embed_color, server_port } = require('./conf.json');
 const db = require('./database.json');
 
 pinger.get('/', (req, res) => {
@@ -56,7 +67,7 @@ pinger.listen(server_port, () => {
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
   client.user.setActivity(status_text, { type: status_type });
-  client.channels.cache.get(log_channel_id).send(`Bot is alive!`);
+  client.channels.cache.get(log_channel_id).send('Bot is online!');
 });
 
 client.on('guildCreate', guild => {
@@ -75,6 +86,7 @@ client.on('message', msg => {
   if (msg.content.startsWith(bot_prefix)) {
     db.cmds_used++;
     fs.writeFileSync('./database.json', JSON.stringify(db));
+    client.channels.cache.get(log_channel_id).send(`${msg.author.username}: ${msg.content}`);
   }
   if (msg.content === `${bot_prefix}perms`) {
     msg.channel.send('I need the following permissions to run properly:\n```SEND_MESSAGES\nEMBED_LINKS\nATTACH_FILES\nREAD_MESSAGE_HISTORY\nUSE_EXTERNAL_EMOJIS\nADD_REACTIONS```');
@@ -151,10 +163,32 @@ client.on('message', msg => {
   if (msg.channel.type === 'dm') {
     console.log(`${msg.author.tag}: ${msg.content}`);
     msg.react('📧');
-    client.channels.cache.get(log_channel_id).send(`${msg.author.tag}: ${msg.content}`)
+    webhook.send(`${msg.author.tag}: ${msg.content}`)
   }
   if (msg.content === bot_prefix + 'ping') {
-    msg.channel.send('Pong! :ping_pong: \n' + `Response Time: ${client.ws.ping}ms`);
+    msg.channel.send({ embed: {
+      color: embed_color,
+      title: 'Pong! :ping_pong:',
+      description: `${msg.createdTimestamp - msg.createdTimestamp}ms`,
+      fields: [
+        {
+          name: 'Operating System',
+          value: `${os.platform()}`,
+          inline: true
+        },
+        {
+          name: 'CPU Usage',
+          value: `${os.cpus()[0].model}`,
+          inline: true
+        },
+        {
+          name: 'RAM Usage',
+          value: `${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)} MB`,
+          inline: true
+        },
+
+      ]
+    }});
   }
   if (msg.content.startsWith(bot_prefix + 'say')) {
     if (msg.content.includes('@everyone') || msg.content.includes('@here') || msg.content.includes('<@&')) {
@@ -606,13 +640,10 @@ client.on('message', msg => {
       }
     });
   }
-  if (msg.content.startsWith(bot_prefix)) {
-    client.channels.cache.get(log_channel_id).send(`${msg.author.tag}: ${msg.content}`);
-  }
 });
 
 client.on('error', (error) => {
-  client.channels.cache.get(log_channel_id).send({embed: {
+  webhook.send({embed: {
     color: 'RED',
     title: "Error",
     description: 'An error has occured!',
@@ -627,9 +658,6 @@ client.on('error', (error) => {
       text: "sx9.is-a.dev",
     }
   }});
-  if (msg.content.startsWith(bot_prefix)) {
-    client.channels.cache.get(log_channel_id).send(`${msg.author.username}: ${msg.content}`);
-  }
 });
 
 client.on("warn", console.warn);
