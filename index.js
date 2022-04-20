@@ -1,7 +1,6 @@
-//npm i discord.js@12.5.3 node-fetch@2.6.1 express 
+//npm i discord.js@12.5.3 node-fetch@2.6.1 express
 //node index.js
 
-const bot_token = "ODg5Mzg0MjE5Njc4MjMyNjA2.YUgdmQ.YKf0a_tsepvDPP0Fk67MPiAw2_o";
 const owner_main_id = '882595027132493864';
 const owner_alt_id = '916880217329516604';
 const log_channel_id = '963713518966808587';
@@ -10,7 +9,6 @@ const status_type = 'LISTENING';
 const bot_prefix = `sx!`;
 const embed_color = '#00e1ff';
 const server_port = 3000;
-const cooldown_time = 5000;
 
 const Discord = require('discord.js');
 const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES"] });
@@ -23,12 +21,24 @@ if (!fs.existsSync('./database.json')) {
   console.log('Not found database.json, creating...');
   fs.writeFileSync('./database.json', JSON.stringify({
     "cmds_used": 0,
-    "page_views": 0,
-    "save_cmd": "sx!save <text>",
+    "page_views": 0
   }));
 } else {
   console.log('Loaded database.json');
 }
+
+if (!fs.existsSync('./secrets.json')) {
+  console.log('Not found secrets.json, creating...');
+  fs.writeFileSync('./secrets.json', JSON.stringify({
+    "token": "",
+  }));
+  console.log('Go to secrets.json and add your token there.');
+  process.exit();
+} else {
+  console.log('Loaded secrets.json');
+}
+
+const bot_token = require('./secrets.json').token;
 const db = require('./database.json');
 
 pinger.get('/', (req, res) => {
@@ -74,30 +84,6 @@ client.on('message', msg => {
   }
   if (msg.content === `${bot_prefix}vote`) {
     msg.channel.send(`https://top.gg/bot/${client.user.id}/vote`);
-  }
-  if (msg.content.startsWith(`${bot_prefix}userinfo`)) {
-    const user = msg.mentions.users.first();
-    if (!user) {
-      msg.channel.send(`You didn't mention a user!`);
-    } else {
-      msg.channel.send({ embed: {
-        color: embed_color,
-        title: `${user.username}#${user.discriminator}`,
-        description: `ID: ${user.id}`,
-        fields: [
-          {
-            name: 'Created At',
-            value: user.createdAt,
-            inline: true
-          },
-          {
-            name: 'Joined At',
-            value: user.joinedAt,
-            inline: true
-          }
-        ]
-      }});
-    }
   }
   if (msg.content === `${bot_prefix}meme`) {
     fetch('https://meme-api.herokuapp.com/gimme').then(res => res.json()).then(json => {
@@ -171,8 +157,8 @@ client.on('message', msg => {
     msg.channel.send('Pong! :ping_pong: \n' + `Response Time: ${client.ws.ping}ms`);
   }
   if (msg.content.startsWith(bot_prefix + 'say')) {
-    if (msg.content.includes('@everyone') || msg.content.includes('@here')) {
-      msg.channel.send('You cannot use @/everyone or @/here in this command.');
+    if (msg.content.includes('@everyone') || msg.content.includes('@here') || msg.content.includes('<@&')) {
+      msg.channel.send('You cannot use @/everyone, @/here, or ping roles in this command.');
     } else {
       msg.channel.send(msg.content.slice(bot_prefix.length + 4));
     }
@@ -388,16 +374,14 @@ client.on('message', msg => {
       msg.channel.send('Rickroll sent to ' + user.tag);
     }
   }
-  if (msg.content.startsWith(bot_prefix + 'math')) {
+  if (msg.content.startsWith(bot_prefix + 'eval')) {
     let arg = msg.content.slice(bot_prefix.length + 5);
     let result = eval(arg);
-    if (result === undefined) {
-      msg.channel.send('Invalid input.');
-    } else {
+    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
       msg.channel.send({embed: {
         color: embed_color,
-        title: "Math",
-        description: `${msg.author.tag} asked: ${arg}\nAnswer: ${result}`,
+        title: "Eval",
+        description: `${arg}\n\nResult: ${result}`,
         footer: {
           text: "sx9.is-a.dev"
         }
@@ -449,6 +433,11 @@ client.on('message', msg => {
               inline: true
             },
             {
+              name: bot_prefix + "eval <code>",
+              value: `Evaluates a code.`,
+              inline: true
+            },
+            {
               name: bot_prefix + "msg <user> <message>",
               value: `Sends a message to a user.`,
               inline: true
@@ -486,11 +475,6 @@ client.on('message', msg => {
             inline: true
           },
           {
-            name: bot_prefix + "serverstats",
-            value: `Gives you some stats about the server.`,
-            inline: true
-          },
-          {
             name: bot_prefix + "ping",
             value: `See how long it takes to ping the bot.`,
             inline: true
@@ -503,11 +487,6 @@ client.on('message', msg => {
           {
             name: bot_prefix + "cmdsused",
             value: `Sends a message with how many times a user uses me.`,
-            inline: true
-          },
-          {
-            name: bot_prefix + "userinfo <user>",
-            value: `Sends information about a user.`,
             inline: true
           },
         ],
@@ -556,11 +535,6 @@ client.on('message', msg => {
           {
             name: bot_prefix + "owner",
             value: "Sends a message saying if you are the owner or not",
-            inline: true
-          }, 
-          {
-            name: bot_prefix + "math <math>",
-            value: "Sends the answer to a math question",
             inline: true
           },
           {
