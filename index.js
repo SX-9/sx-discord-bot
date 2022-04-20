@@ -169,7 +169,7 @@ client.on('message', msg => {
     msg.channel.send({ embed: {
       color: embed_color,
       title: 'Pong! :ping_pong:',
-      description: `${msg.createdTimestamp - msg.createdTimestamp}ms`,
+      description: `${client.ws.ping}ms Response time`,
       fields: [
         {
           name: 'Operating System',
