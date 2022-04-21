@@ -5,3 +5,4 @@ package-lock.json
 database.json
 secrets.json
 conf.json
+.vscode/sftp.json

@@ -16,6 +16,8 @@ if (!fs.existsSync('./database.json')) {
     "page_views": 0,
     "bot_rps_wins": 0,
     "bot_rps_losses": 0,
+    "cats_gathered": 0,
+    "rickrolls": 0,
   }));
 } else {
   console.log('Loaded database.json');
@@ -381,13 +383,14 @@ client.on('message', msg => {
     }});
   }
   if (msg.content === bot_prefix + 'cat') {
+    db.cats_gathered++;
     fetch('https://api.thecatapi.com/v1/images/search') 
     .then(res => res.json())
     .then(json => {
       msg.channel.send({embed: {
         color: embed_color,
         title: "Cat",
-        description: json[0].url,
+        description: 'Image Source: ' + json[0].url + '\nCats generated: ' + db.cats_gathered,
         image: {
           url: json[0].url
         },
@@ -413,7 +416,8 @@ client.on('message', msg => {
       msg.channel.send("You need to mention someone to rickroll them. Since you didn't, I'll rickroll you later ;)");
     } else {
       user.send(`You recived a message from someone...\nMessage: ||Never Gonna Give You Up Never Gonna Let You Down Never Gonna Run Around And Desert You||`);
-      msg.channel.send('Rickroll sent to ' + user.tag);
+      db.rickrolls++;
+      msg.channel.send('Rickroll sent to ' + user.tag + '!\nTotal rickrolls sent: ' + db.rickrolls);
     }
   }
   if (msg.content.startsWith(bot_prefix + 'eval')) {
