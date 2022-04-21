@@ -434,6 +434,13 @@ client.on('message', msg => {
       }});
     }
   }
+  if (msg.content === bot_prefix + 'database') {
+    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
+      msg.channel.send('Type the following command to get the database: ```' + bot_prefix + 'eval msg.author.send("Here is the database.", { files: ["./database.json"] })```');
+    } else {
+      msg.channel.send('You do not have permission to use this command.');
+    }
+  }
   if (msg.content === bot_prefix + 'help owner') {
     if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
       msg.react('889165118104023042');
@@ -457,6 +464,10 @@ client.on('message', msg => {
               name: bot_prefix + "serverlist",
               value: `Sends a list of all the servers the bot is in.`,
               inline: true
+            },
+            {
+              name: bot_prefix + "database",
+              value: `Sends the bot's database.json file to you.`,
             },
             {
               name: bot_prefix + "setname <name>",
