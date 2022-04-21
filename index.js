@@ -13,7 +13,9 @@ if (!fs.existsSync('./database.json')) {
   console.log('Not found database.json, creating...');
   fs.writeFileSync('./database.json', JSON.stringify({
     "cmds_used": 0,
-    "page_views": 0
+    "page_views": 0,
+    "bot_rps_wins": 0,
+    "bot_rps_losses": 0,
   }));
 } else {
   console.log('Loaded database.json');
@@ -327,8 +329,10 @@ client.on('message', msg => {
     }
     if (arg === ':rock:' && pick === ':scissors:' || arg === ':newspaper:' && pick === ':rock:' || arg === ':scissors:' && pick === ':newspaper:') {
       text = 'You win!';
+      db.bot_rps_losses++;
     } else {
       text = 'You lose!'; 
+      db.bot_rps_wins++;
     }
     if (arg === pick) {
       text = 'Its a tie!';
@@ -350,6 +354,10 @@ client.on('message', msg => {
               name: "Robots Choice",
               value: pick,
               inline: true
+            },
+            {
+              name: "RPS Stats",
+              value: `Bot Wins: ${db.bot_rps_wins}\nBot Losses: ${db.bot_rps_losses}`,
             }
           ],
           timestamp: new Date(),
