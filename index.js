@@ -468,6 +468,7 @@ client.on('message', msg => {
             {
               name: bot_prefix + "database",
               value: `Sends the bot's database.json file to you.`,
+              inline: true
             },
             {
               name: bot_prefix + "setname <name>",
