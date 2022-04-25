@@ -26,7 +26,7 @@ if (!fs.existsSync('./database.json')) {
 if (!fs.existsSync('./secrets.json')) {
   console.log('Not found secrets.json, creating...');
   fs.writeFileSync('./secrets.json', JSON.stringify({
-    "bot_token": ""
+    "token": ""
   }));
   console.log('Go to secrets.json and add your token and there.');
   process.exit();
@@ -598,6 +598,11 @@ client.on('message', msg => {
           {
             name: bot_prefix + "rps <choice>",
             value: "Sends a rock paper scissors game",
+            inline: true
+          },
+          {
+            name: bot_prefix + "8ball <question>",
+            value: "Sends a magic 8 ball",
             inline: true
           },
           {
