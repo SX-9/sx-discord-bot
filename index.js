@@ -432,6 +432,8 @@ client.on('message', msg => {
           text: "sx9.is-a.dev"
         }
       }});
+    } else {
+      msg.channel.send('You do not have access to this command.');
     }
   }
   if (msg.content === bot_prefix + 'database') {
