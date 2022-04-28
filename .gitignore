@@ -6,3 +6,4 @@ database.json
 secrets.json
 conf.json
 .vscode
+.npm

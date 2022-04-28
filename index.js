@@ -222,34 +222,6 @@ client.on('message', msg => {
     msg.react('889165118104023042');
     msg.react('889165118582165584');
   }
-  if (msg.content === bot_prefix + 'links') {
-    msg.channel.send({embed: {
-        color: embed_color,
-        title: "Links",
-        description: "Here are some links I can help you with!",
-        fields: [
-          {
-            name: "Website",
-            value: "[Click here to go to my website](https://sx9.is-a.dev/).",
-            inline: true
-          },
-          {
-            name: "Discord",
-            value: "[Click here to go to my Discord server](https://chat-with.sx9.is-a.dev).",
-            inline: true
-          },
-          {
-            name: "Invite",
-            value: `[Click here to invite me to your server](https://discord.com/api/oauth2/authorize?client_id=${client.user.id}&permissions=274878285888&scope=bot).`,
-            inline: true
-          }
-        ],
-        timestamp: new Date(),
-        footer: {
-          text: "sx9.is-a.dev",
-        }
-    }});
-  }
   if (msg.content.startsWith(bot_prefix + 'kill')) {
     if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
       msg.react('889165118104023042');
@@ -421,13 +393,11 @@ client.on('message', msg => {
     }
   }
   if (msg.content.startsWith(bot_prefix + 'eval')) {
-    let arg = msg.content.slice(bot_prefix.length + 5);
-    let result = eval(arg);
     if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
       msg.channel.send({embed: {
         color: embed_color,
         title: "Eval",
-        description: `${arg}\n\nResult: ${result}`,
+        description: `Input: \`\`${msg.content.slice(bot_prefix.length + 5)}\`\`\n\nOutput: \`\`${eval(msg.content.slice(bot_prefix.length + 5))}\`\``,
         footer: {
           text: "sx9.is-a.dev"
         }
@@ -537,11 +507,6 @@ client.on('message', msg => {
           {
             name: bot_prefix + "ping",
             value: `See how long it takes to ping the bot.`,
-            inline: true
-          },
-          {
-            name: bot_prefix + "links",
-            value: `Sends a list of all the links the bot has.`,
             inline: true
           },
           {
@@ -662,6 +627,10 @@ client.on('message', msg => {
             value: "Sends a list of commands only the owner can use",
             inline: true
           },
+          {
+            name: "Links",
+            value: "[Vote Me On Top.gg](https://top.gg/bot/723897885869058688/vote) | [Invite Me](https://discordapp.com/oauth2/authorize?client_id=723897885869058688&scope=bot&permissions=8) | [Support Server](https://discord.gg/723897885869058688) | [Github Source](https://github.com/SX-9/sx-discord-bot) | [Website](https://sx9.is-a.dev)",
+          }
         ],
         timestamp: new Date(),
         footer: {
