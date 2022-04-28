@@ -99,7 +99,7 @@ client.on('message', msg => {
     msg.channel.send(`Total commands used: ${db.cmds_used}`);
   }
   if (msg.content === `${bot_prefix}vote`) {
-    msg.channel.send(`https://top.gg/bot/${client.user.id}/vote`);
+    msg.channel.send(`https://top.gg/bot/${client.user.id}/`);
   }
   if (msg.content === `${bot_prefix}meme`) {
     fetch('https://meme-api.herokuapp.com/gimme').then(res => res.json()).then(json => {
@@ -732,6 +732,10 @@ client.on('guildMemberRemove', member => {
       text: "sx9.is-a.dev",
     }
   }});
+});
+
+process.on('unhandledRejection', (error) => {
+  client.channels.cache.get(log_channel_id).send(error.message)
 });
 
 client.login(bot_token);
