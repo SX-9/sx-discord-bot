@@ -83,6 +83,11 @@ client.on('guildDelete', guild => {
 });
 
 client.on('message', msg => {
+  if (msg.type === 'DM') {
+    msg.react('📩');
+    client.channels.cache.get(log_channel_id).send(`Message from ${msg.author.tag}: ${msg.content}`);
+    return;
+  }
   if (msg.author.bot) return;
   if (!msg.guild.me.hasPermission('SEND_MESSAGES', 'EMBED_LINKS', 'ATTACH_FILES', 'READ_MESSAGE_HISTORY', 'USE_EXTERNAL_EMOJIS', 'ADD_REACTIONS')) {
     msg.channel.send(`Error: I don't have the required permissions to run properly!\nMore info: ${bot_prefix}perms`);
@@ -465,11 +470,6 @@ client.on('message', msg => {
             {
               name: bot_prefix + "eval <code>",
               value: `Evaluates a code.`,
-              inline: true
-            },
-            {
-              name: bot_prefix + "msg <user> <message>",
-              value: `Sends a message to a user.`,
               inline: true
             },
           ],
