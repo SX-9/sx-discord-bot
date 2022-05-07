@@ -83,15 +83,7 @@ client.on('guildDelete', guild => {
 });
 
 client.on('message', msg => {
-  if (msg.type === 'DM') {
-    msg.react('📩');
-    client.channels.cache.get(log_channel_id).send(`Message from ${msg.author.tag}: ${msg.content}`);
-    return;
-  }
   if (msg.author.bot) return;
-  if (!msg.guild.me.hasPermission('SEND_MESSAGES', 'EMBED_LINKS', 'ATTACH_FILES', 'READ_MESSAGE_HISTORY', 'USE_EXTERNAL_EMOJIS', 'ADD_REACTIONS')) {
-    msg.channel.send(`Error: I don't have the required permissions to run properly!\nMore info: ${bot_prefix}perms`);
-  }
   if (msg.content.startsWith(bot_prefix)) {
     db.cmds_used++;
     fs.writeFileSync('./database.json', JSON.stringify(db));
@@ -172,7 +164,7 @@ client.on('message', msg => {
   if (msg.channel.type === 'dm') {
     console.log(`${msg.author.tag}: ${msg.content}`);
     msg.react('📧');
-    webhook.send(`${msg.author.tag}: ${msg.content}`)
+    client.channels.cache.get(log_channel_id).send(`${msg.author.tag}: ${msg.content}`)
   }
   if (msg.content === bot_prefix + 'ping') {
     msg.channel.send({ embed: {
