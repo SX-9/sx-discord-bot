@@ -1,2 +1,2 @@
-sx# sx-discord-bot
+# sx-discord-bot
 Nothing To See Here
