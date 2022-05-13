@@ -45,8 +45,9 @@ if (!fs.existsSync('./conf.json')) {
     "status_type": 'LISTENING',
     "embed_color": '#00e1ff',
     "server_port": 3000,
+    "total_shards": 200,
   }));
-  console.log('Go to conf.json and add your prefix, owner id, log channel id, status text, status type, embed color, and server port there.');
+  console.log('Go to conf.json and add your prefix, owner id, log channel id, and other stuff.');
   process.exit();
 } else {
   console.log('Loaded conf.json');
