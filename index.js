@@ -85,13 +85,13 @@ client.on('guildDelete', guild => {
 
 client.on('message', msg => {
   if (msg.author.bot) return;
-  if (msg.content.startsWith(bot_prefix)) {
-    db.cmds_used++;
-    fs.writeFileSync('./database.json', JSON.stringify(db));
-    client.channels.cache.get(log_channel_id).send(`${msg.author.username}: ${msg.content}`);
-  }
   if (msg.content === `${bot_prefix}perms`) {
     msg.channel.send('I need the ADMINISTRATOR permission to run properly.');
+  }
+  if (msg.content.startsWith(bot_prefix)) {
+    if (!msg.guild.me.hasPermission("ADMINISTRATOR")) return msg.channel.send('Error: I need permisions, run `' + bot_prefix + 'perms`');
+    db.cmds_used++;
+    client.channels.cache.get(log_channel_id).send(`${msg.author.username}: ${msg.content}`);
   }
   if (msg.content === `${bot_prefix}cmdsused`) {
     msg.channel.send(`Total commands used: ${db.cmds_used}`);
@@ -413,16 +413,13 @@ client.on('message', msg => {
   }
   if (msg.content.startsWith(bot_prefix + 'warn')) {
     let user = msg.mentions.users.first();
-    let reason = msg.content.slice(bot_prefix.length + 5);
+    let reason = msg.content.slice(bot_prefix.length + 5) || 'No reason given.';
     if (!msg.member.hasPermission('KICK_MEMBERS')) {
       msg.channel.send('You do not have permission to use this command.');
     } else {
       if (user === undefined) {
         msg.channel.send('You need to mention someone to warn them.');
       } else {
-        if (reason === undefined) {
-          let reason = 'No reason provided.';
-        }
         user.send(`You have been warned in ${msg.guild.name} for: ${reason}`);
         msg.channel.send(`${user.tag} has been warned for: ${reason}`);
       }
@@ -430,16 +427,13 @@ client.on('message', msg => {
   }
   if (msg.content.startsWith(bot_prefix + 'kick')) {
     let user = msg.mentions.users.first();
-    let reason = msg.content.slice(bot_prefix.length + 5);
+    let reason = msg.content.slice(bot_prefix.length + 5) || 'No reason provided.';
     if (!msg.member.hasPermission('KICK_MEMBERS')) {
       msg.channel.send('You do not have permission to use this command.');
     } else {
       if (user === undefined) {
         msg.channel.send('You need to mention someone to kick them.');
       } else {
-        if (reason === undefined) {
-          let reason = 'No reason provided.';
-        }
         user.send(`You have been kicked from ${msg.guild.name} for: ${reason}`);
         msg.channel.send(`${user.tag} has been kicked for: ${reason}`);
         setTimeout(() => {
@@ -448,23 +442,67 @@ client.on('message', msg => {
       }
     }
   }
+  if (msg.content.startsWith(bot_prefix + 'unban')) {
+    let id = msg.content.slice(bot_prefix.length + 6);
+    if (!msg.member.hasPermission('BAN_MEMBERS')) {
+      msg.channel.send('You do not have permission to use this command.');
+    } else {
+      msg.guild.members.unban(id);
+      msg.channel.send(`Unbanned <@&${id}>`);
+    }
+  }
   if (msg.content.startsWith(bot_prefix + 'ban')) {
     let user = msg.mentions.users.first();
-    let reason = msg.content.slice(bot_prefix.length + 5);
+    let why = msg.content.slice(bot_prefix.length + 5) || 'No reason provided.';
     if (!msg.member.hasPermission('BAN_MEMBERS')) {
       msg.channel.send('You do not have permission to use this command.');
     } else {
       if (user === undefined) {
         msg.channel.send('You need to mention someone to ban them.');
       } else {
-        if (reason === undefined) {
-          let reason = 'No reason provided.';
-        }
-        user.send(`You have been banned from ${msg.guild.name} for: ${reason}`);
-        msg.channel.send(`${user.tag} has been banned for: ${reason}`);
+        user.send(`You have been banned from ${msg.guild.name} for: ${why}`);
+        msg.channel.send(`${user.tag} has been banned for: ${why}`);
         setTimeout(() => {
-          msg.guild.member(user).ban(reason);
+          msg.guild.member(user).ban({reason: why});
         }, 3000)
+      }
+    }
+  }
+  if (msg.content.startsWith(bot_prefix + 'slowmode')) {
+    let time = msg.content.slice(bot_prefix.length + 9);
+    if (!msg.member.hasPermission('MANAGE_CHANNELS')) {
+      msg.channel.send('You do not have permission to use this command.');
+    } else {
+      if (time === undefined) {
+        msg.channel.send('You need to specify a time,');
+      } else {
+        if (isNaN(time)) {
+          msg.channel.send('You need to specify a time.');
+        } else {
+          msg.channel.setRateLimitPerUser(time);
+          msg.channel.send('Slowmode set to ' + time + 'seconds.');
+        }
+      }
+    }
+  }
+  if (msg.content.startsWith(bot_prefix + 'purge')) {
+    let amount = msg.content.slice(bot_prefix.length + 6);
+    if (!msg.member.hasPermission('MANAGE_MESSAGES')) {
+      msg.channel.send('You do not have permission to use this command.');
+    } else {
+      if (amount === undefined) {
+        msg.channel.send('You need to specify how many messages to delete.');
+      } else {
+        if (isNaN(amount)) {
+          msg.channel.send('You need to specify how many messages to delete.');
+        } else {
+          if (amount > 100) {
+            msg.channel.send('You cannot delete more than 100 messages at a time.');
+          } else {
+            msg.channel.bulkDelete(amount);
+            msg.channel.send(`Deleted ${amount} messages.`).then(msg => msg.delete({ timeout: 3000 }));
+          }
+        }
       }
     }
   }
@@ -477,6 +515,21 @@ client.on('message', msg => {
       title: "Moderation Commands",
       description: "These commands are for moderators and administrators only.",
       fields: [
+        {
+          name: bot_prefix + "slowmode <seconds>",
+          value: "Sets the slowmode for the channel.",
+          inline: true
+        },
+        {
+          name: bot_prefix + "unban <id>",
+          value: "Unbans a user.",
+          inline: true
+        },
+        {
+          name: bot_prefix + "purge <amount>",
+          value: "Deletes messages.",
+          inline: true
+        },
         {
           name: bot_prefix + "warn <user> <reason>",
           value: "Warns a user.",
@@ -491,7 +544,7 @@ client.on('message', msg => {
           name: bot_prefix + "ban <user> <reason>",
           value: "Bans a user.",
           inline: true
-        }
+        },
       ],
       footer: {
         text: "sx9.is-a.dev"
@@ -709,11 +762,6 @@ client.on('message', msg => {
           {
             name: bot_prefix + "help fun",
             value: "Sends a list of commands that are used to have fun",
-            inline: true
-          },
-          {
-            name: bot_prefix + "help owner",
-            value: "Sends a list of commands only the owner can use",
             inline: true
           },
           {
