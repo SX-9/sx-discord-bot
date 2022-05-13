@@ -90,7 +90,7 @@ client.on('message', msg => {
     client.channels.cache.get(log_channel_id).send(`${msg.author.username}: ${msg.content}`);
   }
   if (msg.content === `${bot_prefix}perms`) {
-    msg.channel.send('I need the following permissions to run properly:\n```SEND_MESSAGES\nEMBED_LINKS\nATTACH_FILES\nREAD_MESSAGE_HISTORY\nUSE_EXTERNAL_EMOJIS\nADD_REACTIONS```');
+    msg.channel.send('I need the ADMINISTRATOR permission to run properly.');
   }
   if (msg.content === `${bot_prefix}cmdsused`) {
     msg.channel.send(`Total commands used: ${db.cmds_used}`);
@@ -410,6 +410,93 @@ client.on('message', msg => {
       msg.channel.send('You do not have permission to use this command.');
     }
   }
+  if (msg.content.startsWith(bot_prefix + 'warn')) {
+    let user = msg.mentions.users.first();
+    let reason = msg.content.slice(bot_prefix.length + 5);
+    if (!msg.member.hasPermission('KICK_MEMBERS')) {
+      msg.channel.send('You do not have permission to use this command.');
+    } else {
+      if (user === undefined) {
+        msg.channel.send('You need to mention someone to warn them.');
+      } else {
+        if (reason === undefined) {
+          let reason = 'No reason provided.';
+        }
+        user.send(`You have been warned in ${msg.guild.name} for: ${reason}`);
+        msg.channel.send(`${user.tag} has been warned for: ${reason}`);
+      }
+    }
+  }
+  if (msg.content.startsWith(bot_prefix + 'kick')) {
+    let user = msg.mentions.users.first();
+    let reason = msg.content.slice(bot_prefix.length + 5);
+    if (!msg.member.hasPermission('KICK_MEMBERS')) {
+      msg.channel.send('You do not have permission to use this command.');
+    } else {
+      if (user === undefined) {
+        msg.channel.send('You need to mention someone to kick them.');
+      } else {
+        if (reason === undefined) {
+          let reason = 'No reason provided.';
+        }
+        user.send(`You have been kicked from ${msg.guild.name} for: ${reason}`);
+        msg.channel.send(`${user.tag} has been kicked for: ${reason}`);
+        setTimeout(() => {
+          msg.guild.member(user).kick(reason)
+        }, 3000)
+      }
+    }
+  }
+  if (msg.content.startsWith(bot_prefix + 'ban')) {
+    let user = msg.mentions.users.first();
+    let reason = msg.content.slice(bot_prefix.length + 5);
+    if (!msg.member.hasPermission('BAN_MEMBERS')) {
+      msg.channel.send('You do not have permission to use this command.');
+    } else {
+      if (user === undefined) {
+        msg.channel.send('You need to mention someone to ban them.');
+      } else {
+        if (reason === undefined) {
+          let reason = 'No reason provided.';
+        }
+        user.send(`You have been banned from ${msg.guild.name} for: ${reason}`);
+        msg.channel.send(`${user.tag} has been banned for: ${reason}`);
+        setTimeout(() => {
+          msg.guild.member(user).ban(reason);
+        }, 3000)
+      }
+    }
+  }
+  if (msg.content === bot_prefix + 'blurplefier') {
+    msg.channel.send('https://projectblurple.com/paint/');
+  }
+  if (msg.content === bot_prefix + 'help mod') {
+    msg.channel.send({embed: {
+      color: embed_color,
+      title: "Moderation Commands",
+      description: "These commands are for moderators and administrators only.",
+      fields: [
+        {
+          name: bot_prefix + "warn <user> <reason>",
+          value: "Warns a user.",
+          inline: true
+        },
+        {
+          name: bot_prefix + "kick <user> <reason>",
+          value: "Kicks a user.",
+          inline: true
+        },
+        {
+          name: bot_prefix + "ban <user> <reason>",
+          value: "Bans a user.",
+          inline: true
+        }
+      ],
+      footer: {
+        text: "sx9.is-a.dev"
+      }
+    }});
+  }
   if (msg.content === bot_prefix + 'help owner') {
     if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
       msg.react('889165118104023042');
@@ -589,6 +676,10 @@ client.on('message', msg => {
             value: "Rickrolls a user",
             inline: true
           },
+          {
+            name: bot_prefix + "blurplefier",
+            value: "Blurplefy your pfp",
+          }
         ],
         timestamp: new Date(),
         footer: {
@@ -604,6 +695,11 @@ client.on('message', msg => {
         title: client.user.username,
         description: "Hi, Thanks for using me! To contact owners dm me! (I will not respond back)",
         fields: [
+          {
+            name: bot_prefix + "help mod",
+            value: "Sends a list of mod commands",
+            inline: true
+          },
           {
             name: bot_prefix + "help info",
             value: "Sends a list of commands that are used to get info",  
@@ -635,7 +731,7 @@ client.on('message', msg => {
 });
 
 client.on('error', (error) => {
-  webhook.send({embed: {
+  client.channels.cache.get(log_channel_id).send({embed: {
     color: 'RED',
     title: "Error",
     description: 'An error has occured!',
