@@ -4,7 +4,7 @@
 const Discord = require('discord.js');
 const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES"] });
 const express = require('express');
-const pinger = express();
+const app = express();
 const fetch = require('node-fetch');
 const fs = require('fs');
 const os = require("os");
@@ -41,7 +41,7 @@ if (!fs.existsSync('./conf.json')) {
     "log_channel_id": "963713518966808587",
     "owner_main_id": '882595027132493864',
     "owner_alt_id": '916880217329516604',
-    "status_text": 'sx!help | sx9.is-a.dev',
+    "status_text": 'sx!help | localhost.sx9.is-a.dev',
     "status_type": 'LISTENING',
     "embed_color": '#00e1ff',
     "server_port": 3000,
@@ -57,15 +57,33 @@ const bot_token = require('./secrets.json').token;
 const { bot_prefix, owner_main_id, owner_alt_id, log_channel_id, status_text, status_type, embed_color, server_port } = require('./conf.json');
 const db = require('./database.json');
 
-pinger.get('/', (req, res) => {
-  db.page_views++;
-  res.send(`
-  Coded by SX-Spy-Agent#1377<br>
-  Website: <a href="https://sx9.is-a.dev">sx9.is-a.dev</a><br>
-  Page Views: ${db.page_views}<br>
-  `);
+app.enable("trust proxy");
+app.set('etag', false);
+app.use(express.static(__dirname + './'));
+
+app.use((req, res, next) => {
+  console.log(`${req.method}: ${req.url} from ${req.ip}`);
+  next();
 });
-pinger.listen(server_port, () => {
+
+app.get('/', (req, res) => {
+  db.page_views++;
+  let stats = fs.readFileSync('./dash.html', { encoding: 'utf8' });
+  stats = stats.replace('$$avatar$$', client.user.avatarURL());
+  stats = stats.replace('$$username$$', client.user.username);
+  stats = stats.replace('$$client-id$$', client.user.id);
+  stats = stats.replace('$$page-views$$', db.page_views);
+  stats = stats.replace('$$servers$$', client.guilds.cache.size);
+  stats = stats.replace('$$users$$', client.users.cache.size);
+  stats = stats.replace('$$cmds-used$$', db.cmds_used);
+  stats = stats.replace('$$rps-wins$$', db.bot_rps_wins);
+  stats = stats.replace('$$rps-losses$$', db.bot_rps_losses);
+  stats = stats.replace('$$cats-generated$$', db.cats_gathered);
+  stats = stats.replace('$$rickrolls$$', db.rickrolls);
+  res.send(stats)
+  res.sendFile(__dirname + '/dash.html')
+});
+app.listen(server_port, () => {
   console.log(`Listening on port ${server_port}!`);
 });
 
@@ -766,7 +784,7 @@ client.on('message', msg => {
           },
           {
             name: "Links",
-            value: "[Vote Me On Top.gg](https://top.gg/bot/723897885869058688/vote) | [Invite Me](https://discordapp.com/oauth2/authorize?client_id=723897885869058688&scope=bot&permissions=8) | [Support Server](https://discord.gg/723897885869058688) | [Github Source](https://github.com/SX-9/sx-discord-bot) | [Website](https://sx9.is-a.dev)",
+            value: "[Bot Stats](https://localhost.sx9.is-a.dev)[Vote Me On Top.gg](https://top.gg/bot/" + client.user.id + "/vote) | [Invite Me](https://discordapp.com/oauth2/authorize?client_id=" + client.user.id + "scope=bot&permissions=8) | [Support Server](https://discord.gg/723897885869058688) | [Github Source](https://github.com/SX-9/sx-discord-bot) | [Website](https://sx9.is-a.dev)",
           }
         ],
         timestamp: new Date(),
