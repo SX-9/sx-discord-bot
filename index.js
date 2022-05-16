@@ -80,8 +80,14 @@ app.get('/', (req, res) => {
   stats = stats.replace('$$rps-losses$$', db.bot_rps_losses);
   stats = stats.replace('$$cats-generated$$', db.cats_gathered);
   stats = stats.replace('$$rickrolls$$', db.rickrolls);
+  stats = stats.replace('$$ping$$', client.ws.ping);
+  stats = stats.replace('$$uptime$$', client.uptime);
+  stats = stats.replace('$$os$$', os.platform());
+  stats = stats.replace('$$cpu$$', os.cpus()[0].model);
+  stats = stats.replace('$$ram$$', os.totalmem());
   res.send(stats)
   res.sendFile(__dirname + '/dash.html')
+  res.json();
 });
 app.listen(server_port, () => {
   console.log(`Listening on port ${server_port}!`);
