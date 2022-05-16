@@ -1,6 +1,3 @@
-//npm i discord.js@12.5.3 node-fetch@2.6.1 express
-//node index.js
-
 const Discord = require('discord.js');
 const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES"] });
 const express = require('express');
