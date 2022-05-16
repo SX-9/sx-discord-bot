@@ -787,7 +787,7 @@ client.on('message', msg => {
           },
           {
             name: "Links",
-            value: "[Bot Stats](https://cat.sx9.is-a.dev)[Vote Me On Top.gg](https://top.gg/bot/" + client.user.id + "/vote) | [Invite Me](https://discordapp.com/oauth2/authorize?client_id=" + client.user.id + "scope=bot&permissions=8) | [Support Server](https://discord.gg/723897885869058688) | [Github Source](https://github.com/SX-9/sx-discord-bot) | [Website](https://sx9.is-a.dev)",
+            value: "[Bot Stats](https://cat.sx9.is-a.dev) | [Vote Me On Top.gg](https://top.gg/bot/" + client.user.id + "/vote) | [Invite Me](https://discordapp.com/oauth2/authorize?client_id=" + client.user.id + "scope=bot&permissions=8) | [Support Server](https://discord.gg/723897885869058688) | [Github Source](https://github.com/SX-9/sx-discord-bot) | [Website](https://sx9.is-a.dev)",
           }
         ],
         timestamp: new Date(),
