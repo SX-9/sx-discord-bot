@@ -1,6 +1,6 @@
 const { ShardingManager } = require('discord.js');
-const botToken = require('./secrets.json').token;
-const shardCount = require('./secrets.json').total_shards;
+const botToken = require('./secrets.json').token || process.env.token;
+const shardCount = require('./conf.json').total_shards || auto;
 
 let manager = new ShardingManager('./index.js', {
     token: botToken,

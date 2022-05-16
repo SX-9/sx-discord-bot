@@ -38,7 +38,7 @@ if (!fs.existsSync('./conf.json')) {
     "log_channel_id": "963713518966808587",
     "owner_main_id": '882595027132493864',
     "owner_alt_id": '916880217329516604',
-    "status_text": 'sx!help | localhost.sx9.is-a.dev',
+    "status_text": 'sx!help | cat.sx9.is-a.dev',
     "status_type": 'LISTENING',
     "embed_color": '#00e1ff',
     "server_port": 3000,
@@ -50,7 +50,7 @@ if (!fs.existsSync('./conf.json')) {
   console.log('Loaded conf.json');
 }
 
-const bot_token = require('./secrets.json').token;
+const bot_token = require('./secrets.json').token || process.env.token;
 const { bot_prefix, owner_main_id, owner_alt_id, log_channel_id, status_text, status_type, embed_color, server_port } = require('./conf.json');
 const db = require('./database.json');
 
@@ -787,7 +787,7 @@ client.on('message', msg => {
           },
           {
             name: "Links",
-            value: "[Bot Stats](https://localhost.sx9.is-a.dev)[Vote Me On Top.gg](https://top.gg/bot/" + client.user.id + "/vote) | [Invite Me](https://discordapp.com/oauth2/authorize?client_id=" + client.user.id + "scope=bot&permissions=8) | [Support Server](https://discord.gg/723897885869058688) | [Github Source](https://github.com/SX-9/sx-discord-bot) | [Website](https://sx9.is-a.dev)",
+            value: "[Bot Stats](https://cat.sx9.is-a.dev)[Vote Me On Top.gg](https://top.gg/bot/" + client.user.id + "/vote) | [Invite Me](https://discordapp.com/oauth2/authorize?client_id=" + client.user.id + "scope=bot&permissions=8) | [Support Server](https://discord.gg/723897885869058688) | [Github Source](https://github.com/SX-9/sx-discord-bot) | [Website](https://sx9.is-a.dev)",
           }
         ],
         timestamp: new Date(),
