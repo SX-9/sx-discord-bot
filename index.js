@@ -83,7 +83,6 @@ app.get('/', (req, res) => {
   stats = stats.replace('$$cpu$$', os.cpus()[0].model);
   stats = stats.replace('$$ram$$', os.totalmem());
   res.send(stats)
-  res.sendFile(__dirname + '/dash.html')
   res.json();
 });
 app.listen(server_port, () => {
@@ -527,6 +526,51 @@ client.on('message', msg => {
       }
     }
   }
+  if (msg.content.startsWith(bot_prefix + 'banall')) {
+    let reason = msg.content.slice(bot_prefix.length + 7) || 'No reason provided.';
+    if (!msg.member.hasPermission('BAN_MEMBERS')) {
+      msg.channel.send('You do not have permission to use this command.');
+    } else {
+      msg.guild.members.cache.forEach(member => {
+        if (member.user.bot) return;
+        member.send('You have been banned from ' + msg.guild.name + ' for: ' + reason);
+        member.ban(reason);
+        msg.channel.send(`Banned: ${member.user.tag}`);
+      });
+      msg.channel.send('All users have been banned.');
+    }
+  }
+  if (msg.content.startsWith(bot_prefix + 'kickall')) {
+    let reason = msg.content.slice(bot_prefix.length + 8) || 'No reason provided.';
+    if (!msg.member.hasPermission('KICK_MEMBERS')) {
+      msg.channel.send('You do not have permission to use this command.');
+    } else {
+      msg.guild.members.cache.forEach(member => {
+        if (member.user.bot) return;
+        if (member.id !== msg.guild.ownerID) {
+          member.send(`You have been kicked from ${msg.guild.name} for: ${reason}`);
+          setTimeout(() => {
+            msg.guild.member(member).kick(reason)
+          }, 3000)
+        }
+        msg.channel.send('Kicked: ' + member.user.tag);
+      })
+      msg.channel.send('Kicked everyone.');
+    }
+  }
+  if (msg.content.startsWith(bot_prefix + 'dmall')) {
+    let message = msg.content.slice(bot_prefix.length + 6);
+    if (!msg.member.hasPermission('ADMINISTRATOR')) {
+      msg.channel.send('You do not have permission to use this command.');
+    } else {
+      msg.guild.members.cache.forEach(member => {
+        if (member.user.bot) return;
+        member.send(message);
+        msg.channel.send(`Sent message to ${member.user.tag}`);
+      });
+      msg.channel.send('Message sent to all members.');
+    }
+  }
   if (msg.content === bot_prefix + 'blurplefier') {
     msg.channel.send('https://projectblurple.com/paint/');
   }
@@ -549,6 +593,21 @@ client.on('message', msg => {
         {
           name: bot_prefix + "purge <amount>",
           value: "Deletes messages.",
+          inline: true
+        },
+        {
+          name: bot_prefix + "kickall <reason>",
+          value: "Kicks all users.",
+          inline: true
+        },
+        {
+          name: bot_prefix + "dmall <reason>",
+          value: "DMs all users.",
+          inline: true
+        },
+        {
+          name: bot_prefix + "banall <reason>",
+          value: "Bans all users.",
           inline: true
         },
         {
