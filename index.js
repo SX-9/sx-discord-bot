@@ -5,9 +5,10 @@ const app = express();
 const fetch = require('node-fetch');
 const fs = require('fs');
 const os = require("os");
+const chalk = require('chalk');
 
 if (!fs.existsSync('./database.json')) {
-  console.log('Not found database.json, creating...');
+  console.log(chalk.yellowBright('Not found database.json, creating...'));
   fs.writeFileSync('./database.json', JSON.stringify({
     "cmds_used": 0,
     "page_views": 0,
@@ -17,22 +18,22 @@ if (!fs.existsSync('./database.json')) {
     "rickrolls": 0,
   }));
 } else {
-  console.log('Loaded database.json');
+  console.log(chalk.greenBright('Loaded database.json'));
 }
 
 if (!fs.existsSync('./secrets.json')) {
-  console.log('Not found secrets.json, creating...');
+  console.log(chalk.yellowBright('Not found secrets.json, creating...'));
   fs.writeFileSync('./secrets.json', JSON.stringify({
     "token": ""
   }));
-  console.log('Go to secrets.json and add your token and there.');
+  console.log(chalk.redBright('Go to secrets.json and add your token and there.'));
   process.exit();
 } else {
-  console.log('Loaded secrets.json');
+  console.log(chalk.greenBright('Loaded secrets.json'));
 }
 
 if (!fs.existsSync('./conf.json')) {
-  console.log('Not found conf.json, creating...');
+  console.log(chalk.yellowBright('Not found conf.json, creating...'));
   fs.writeFileSync('./conf.json', JSON.stringify({
     "bot_prefix": "sx!",
     "log_channel_id": "963713518966808587",
@@ -44,10 +45,10 @@ if (!fs.existsSync('./conf.json')) {
     "server_port": 3000,
     "total_shards": 200,
   }));
-  console.log('Go to conf.json and add your prefix, owner id, log channel id, and other stuff.');
+  console.log(chalk.redBright('Go to conf.json and add your prefix, owner id, log channel id, and other stuff.'));
   process.exit();
 } else {
-  console.log('Loaded conf.json');
+  console.log(chalk.greenBright('Loaded conf.json'));
 }
 
 const bot_token = require('./secrets.json').token || process.env.token;
@@ -59,7 +60,7 @@ app.set('etag', false);
 app.use(express.static(__dirname + './'));
 
 app.use((req, res, next) => {
-  console.log(`${req.method}: ${req.url} from ${req.ip}`);
+  console.log(chalk.blueBright(`${req.method}: ${req.url} from ${req.ip}`));
   next();
 });
 
@@ -86,11 +87,11 @@ app.get('/', (req, res) => {
   res.json();
 });
 app.listen(server_port, () => {
-  console.log(`Listening on port ${server_port}!`);
+  console.log(chalk.greenBright(`Listening on port ${server_port}!`));
 });
 
 client.on('ready', () => {
-  console.log(`Logged in as ${client.user.tag}!`);
+  console.log(chalk.greenBright(`Logged in as ${client.user.tag}!`));
   client.user.setActivity(status_text, { type: status_type });
   client.channels.cache.get(log_channel_id).send('Bot is online!');
 });
@@ -183,7 +184,7 @@ client.on('message', msg => {
     }
   }
   if (msg.channel.type === 'dm') {
-    console.log(`${msg.author.tag}: ${msg.content}`);
+    console.log(chalk.blueBright(`${msg.author.tag}: ${msg.content}`));
     msg.react('📧');
     client.channels.cache.get(log_channel_id).send(`${msg.author.tag}: ${msg.content}`)
   }
@@ -244,7 +245,7 @@ client.on('message', msg => {
     if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
       msg.react('889165118104023042');
       client.channels.cache.get(log_channel_id).send(`${msg.author.tag} has killed the bot.`);
-      console.log('Bot killed by ' + msg.author.tag);
+      console.log(chalk.redBright('Bot killed by ' + msg.author.tag));
       setTimeout(() => {
         process.exit(0);
       }, 3000);
@@ -297,7 +298,7 @@ client.on('message', msg => {
   if (msg.content.startsWith(bot_prefix + 'log')) {
     if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
       msg.channel.send('Logged.');
-      console.log(msg.content.slice(bot_prefix.length + 4));
+      console.log(chalk.yellowBright(msg.content.slice(bot_prefix.length + 4)));
       client.channels.cache.get(log_channel_id).send(msg.content.slice(bot_prefix.length + 4));
     } else {
       msg.react('889165118582165584');

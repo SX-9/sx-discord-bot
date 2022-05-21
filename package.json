@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/SX-9/sx-discord-bot#readme",
   "dependencies": {
+    "chalk": "^4.1.1",
     "discord.js": "^12.5.3",
     "express": "^4.17.3",
     "node-fetch": "^2.6.1"
