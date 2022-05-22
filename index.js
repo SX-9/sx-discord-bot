@@ -42,6 +42,9 @@ if (!fs.existsSync('./conf.json')) {
     "status_text": 'sx!help | cat.sx9.is-a.dev',
     "status_type": 'LISTENING',
     "embed_color": '#00e1ff',
+    "yes_emoji_id": '975216960449151006',
+    "no_emoji_id": '975216906841780285',
+    "random_emoji_id": '975216920955596880',
     "server_port": 3000,
     "total_shards": 200,
   }));
@@ -52,7 +55,19 @@ if (!fs.existsSync('./conf.json')) {
 }
 
 const bot_token = require('./secrets.json').token || process.env.token;
-const { bot_prefix, owner_main_id, owner_alt_id, log_channel_id, status_text, status_type, embed_color, server_port } = require('./conf.json');
+const { 
+  bot_prefix, 
+  owner_main_id, 
+  owner_alt_id, 
+  log_channel_id, 
+  status_text, 
+  status_type, 
+  embed_color, 
+  yes_emoji_id, 
+  no_emoji_id, 
+  random_emoji_id,
+  server_port 
+} = require('./conf.json');
 const db = require('./database.json');
 
 app.enable("trust proxy");
@@ -235,22 +250,22 @@ client.on('message', msg => {
     }});
   }
   if (msg.content === bot_prefix + 'react') {
-    msg.react('909064500794253312');
+    msg.react(random_emoji_id);
   }
   if (msg.content.startsWith(bot_prefix + 'poll')) {
-    msg.react('889165118104023042');
-    msg.react('889165118582165584');
+    msg.react(yes_emoji_id);
+    msg.react(no_emoji_id);
   }
   if (msg.content.startsWith(bot_prefix + 'kill')) {
     if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
-      msg.react('889165118104023042');
+      msg.react(yes_emoji_id);
       client.channels.cache.get(log_channel_id).send(`${msg.author.tag} has killed the bot.`);
       console.log(chalk.redBright('Bot killed by ' + msg.author.tag));
       setTimeout(() => {
         process.exit(0);
       }, 3000);
     } else {
-      msg.react('889165118582165584')
+      msg.react(no_emoji_id)
       msg.channel.send('You are not the owner of this bot.');
     }
   }
@@ -260,11 +275,11 @@ client.on('message', msg => {
   }
   if (msg.content === bot_prefix + 'token') {
     if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
-      msg.react('889165118104023042');
+      msg.react(yes_emoji_id);
       msg.channel.send('Check your DMs!');
       msg.author.send("```" + bot_token + "```");
     } else {
-      msg.react('889165118582165584');
+      msg.react(no_emoji_id);
       msg.channel.send('You do not have permission to use this command.');
     }
   }
@@ -272,17 +287,17 @@ client.on('message', msg => {
     if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
       msg.channel.send('Owner: True');
     } else {
-      msg.react('889165118582165584');
+      msg.react(no_emoji_id);
       msg.channel.send('Owner: False');
     }
   }
   if (msg.content.startsWith(bot_prefix + 'setname')) {
     if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
       client.user.setUsername(msg.content.slice(bot_prefix.length + 8));
-      msg.react('889165118104023042');
+      msg.react(yes_emoji_id);
       msg.channel.send('Done!');
     } else {
-      msg.react('889165118582165584');
+      msg.react(no_emoji_id);
       msg.channel.send('You do not have permission to use this command.');
     }
   }
@@ -291,7 +306,7 @@ client.on('message', msg => {
       msg.channel.send('Avatar changed.');
       client.user.setAvatar(msg.content.slice(bot_prefix.length + 7));
     } else {
-      msg.react('889165118582165584');
+      msg.react(no_emoji_id);
       msg.channel.send('You do not have permission to use this command.');
     }
   }
@@ -301,7 +316,7 @@ client.on('message', msg => {
       console.log(chalk.yellowBright(msg.content.slice(bot_prefix.length + 4)));
       client.channels.cache.get(log_channel_id).send(msg.content.slice(bot_prefix.length + 4));
     } else {
-      msg.react('889165118582165584');
+      msg.react(no_emoji_id);
       msg.channel.send('You do not have permission to use this command.');
     }
   }
@@ -413,14 +428,27 @@ client.on('message', msg => {
   }
   if (msg.content.startsWith(bot_prefix + 'eval')) {
     if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
-      msg.channel.send({embed: {
-        color: embed_color,
-        title: "Eval",
-        description: `Input: \`\`${msg.content.slice(bot_prefix.length + 5)}\`\`\n\nOutput: \`\`${eval(msg.content.slice(bot_prefix.length + 5))}\`\``,
-        footer: {
-          text: "sx9.is-a.dev"
-        }
-      }});
+      let arg = msg.content.slice(bot_prefix.length + 5);
+      try {
+        let evaled = eval(arg);
+        msg.channel.send({embed: {
+          color: embed_color,
+          title: "Eval",
+          description: `Input: ${arg}\nOutput: ${evaled}`,
+          footer: {
+            text: "sx9.is-a.dev"
+          }
+        }});
+      } catch (err) {
+        msg.channel.send({embed: {
+          color: 'RED',
+          title: "Eval ERROR",
+          description: `Input: ${arg}\nOutput: ${err}`,
+          footer: {
+            text: "sx9.is-a.dev"
+          }
+        }});
+      }
     } else {
       msg.channel.send('You do not have access to this command.');
     }
@@ -634,7 +662,7 @@ client.on('message', msg => {
   }
   if (msg.content === bot_prefix + 'help owner') {
     if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
-      msg.react('889165118104023042');
+      msg.react(yes_emoji_id);
       msg.channel.send("Check your DMs!");
       msg.author.send({embed: {
           color: embed_color,
@@ -693,7 +721,7 @@ client.on('message', msg => {
           }
       }});
     } else {
-      msg.react('889165118582165584');
+      msg.react(no_emoji_id);
       msg.channel.send('You do not have permission to use this command.');
     }
   }
