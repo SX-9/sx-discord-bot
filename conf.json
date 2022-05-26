@@ -1,14 +1,14 @@
 {
     "bot_prefix": "sx!",
     "log_channel_id": "963713518966808587",
-    "owner_main_id": '882595027132493864',
-    "owner_alt_id": '916880217329516604',
-    "status_text": 'sx!help | cat.sx9.is-a.dev',
-    "status_type": 'LISTENING',
-    "embed_color": '#00e1ff',
-    "yes_emoji_id": '975216960449151006',
-    "no_emoji_id": '975216906841780285',
-    "random_emoji_id": '975216920955596880',
+    "owner_main_id": "882595027132493864",
+    "owner_alt_id": "916880217329516604",
+    "status_text": "sx!help | cat.sx9.is-a.dev",
+    "status_type": "LISTENING",
+    "embed_color": "#00e1ff",
+    "yes_emoji_id": "975216960449151006",
+    "no_emoji_id": "975216906841780285",
+    "random_emoji_id": "975216920955596880",
     "server_port": 3000,
     "total_shards": 200
   }
