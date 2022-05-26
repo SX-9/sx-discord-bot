@@ -9,6 +9,6 @@
     "yes_emoji_id": "975216960449151006",
     "no_emoji_id": "975216906841780285",
     "random_emoji_id": "975216920955596880",
-    "server_port": 3000,
+    "server_port": "$PORT",
     "total_shards": 200
   }
