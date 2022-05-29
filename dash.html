@@ -1,98 +1,63 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Bot Stats | Made by SX</title>
-        <style>
-            body {
-                background-color: black;
-                font-family: sans-serif;
-                text-align: center;
-                display: flex;
-                align-items: center;
-                flex-direction: column;
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: sans-serif;
+            text-align: center;
+        }
+        label {
+            color: white;
+            font-size: 1em;
+            font-weight: bold;
+            border: none;
+            background-color: black;
+            padding: 1em;
+            border-radius: 5px;
+        }
+        button, input {
+            background-color: white;
+            border: none;
+            color: black;
+            padding: 0.5em;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 1em;
+            margin: 0.5em;
+            cursor: pointer;
+            border-radius: 10% 10% 10% 10%;
+        }
+    </style>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous"></script>
+    <script defer>
+        const io = io('http://localhost:5000');
+        io.on('connect', () => {
+            console.log('Connected To Server!');
+        });
+
+        function evalCode() {
+            console.log('Sending...');
+            try {
+                io.emit('code-eval', document.getElementById('code').value);
+                console.log('Sent!');
+            } catch (e) {
+                console.log('Error: ' + e);
             }
-            img {
-                border-radius: 50%;
-                border: 2px solid #2cff2c;
-                width: 5em;
-                height: 5em;
-            }
-            h1, h2, a{
-                text-align: center; 
-                color: white;
-            }
-            p {
-                text-align: center;
-                font-size: 1.5em;
-                color: white;
-            }
-            button {
-                background-color: white;
-                border: none;
-                color: black;
-                padding: 13px 20px;
-                text-align: center;
-                text-decoration: none;
-                display: inline-block;
-                font-size: 16px;
-                margin: 4px 2px;
-                cursor: pointer;
-            }
-            span {
-                color: lightblue;
-            }
-            div#stats {
-                --auto-grid-min-size: 19em;
-                display: grid;
-                justify-content: center;
-                align-items: center;
-                grid-template-columns: repeat(auto-fill, minmax(var(--auto-grid-min-size), 1fr));
-                width: 100%;
-                height: 100%;
-                gap: 2.5rem;
-            }
-            div.stats {
-                min-height: 27rem;
-                border: 2px solid white;
-                padding: 2em;
-            }
-        </style>
-    </head>
-    <body>
-        <img src="$$avatar$$" alt="Bot avatar">
-        <h1>$$username$$ Bot Stats</h1>
-        <a href="https://discordapp.com/oauth2/authorize?client_id=$$client-id$$&scope=bot&permissions=8">
-            <button>Invite Me!</button>
-        </a>
-        <br>
-        <div id="stats">
-            <div class="stats">
-                <h2>Main Stats</h2>
-                <p>Total Visits: <span>$$page-views$$</span></p>
-                <p>Total Servers: <span>$$servers$$</span></p>
-                <p>Total Users: <span>$$users$$</span></p>
-            </div>
-            <div class="stats">
-                <h2>Cmds Stats</h2>
-                <p>Commands Used: <span>$$cmds-used$$</span></p>
-                <p>Bot Rps Wins: <span>$$rps-wins$$</span></p>
-                <p>Bot Rps Losses: <span>$$rps-losses$$</span></p>
-                <p>Cats Generated: <span>$$cats-generated$$</span></p>
-                <p>Rickrolls: <span>$$rickrolls$$</span></p>
-            </div>
-            <div class="stats">
-                <h2>Other Stats</h2>
-                <p>Client Ping: <span>$$ping$$ms</span></p>
-                <p>Bot Uptime: <span>$$uptime$$ms</span></p>
-                <p>Operating System: <span>$$os$$</span></p>
-                <p>CPU Usage: <span>$$cpu$$</span></p>
-                <p>RAM Usage: <span>$$ram$$</span></p>
-            </div>
-        </div>
-        <br>
-        <p>Made by <a href="https://sx9.is-a.dev"><span>sx9.is-a.dev</span></a></p>
-    </body>
+        }
+    </script>
+    <title>Bot Dashboard | Made by SX</title>
+</head>
+<body>
+    <h1>$$username$$ Admin Control Panel</h1>
+    <label>Code Eval:</label>
+    <input type="text" id="code" placeholder="Enter JS Code Here!">
+    <button onclick="evalCode()">Evaluate Code</button>
+    <p>Made by <a href="https://sx9.is-a.dev"><span>sx9.is-a.dev</span></a></p>
+</body>
 </html>

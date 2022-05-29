@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "nodemon": "nodemon index.js --ext js,html,json",
     "shard": "node shard.js"
   },
   "repository": {
@@ -24,6 +25,10 @@
     "chalk": "^4.1.1",
     "discord.js": "^12.5.3",
     "express": "^4.17.3",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "socket.io": "^4.5.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.16"
   }
 }

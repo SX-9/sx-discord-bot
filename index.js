@@ -1,11 +1,16 @@
 const Discord = require('discord.js');
-const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES"] });
-const express = require('express');
-const app = express();
+const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MESSAGES", "GUILD_MESSAGES_REACTS"] });
+const app = require('express')();
 const fetch = require('node-fetch');
 const fs = require('fs');
 const os = require("os");
 const chalk = require('chalk');
+const io = require('socket.io')(5000, {
+  cors: { 
+    origin: '*',
+    methods: ['POST']
+  } 
+});
 
 if (!fs.existsSync('./database.json')) {
   console.log(chalk.yellowBright('Not found database.json, creating...'));
@@ -24,7 +29,8 @@ if (!fs.existsSync('./database.json')) {
 if (!fs.existsSync('./secrets.json')) {
   console.log(chalk.yellowBright('Not found secrets.json, creating...'));
   fs.writeFileSync('./secrets.json', JSON.stringify({
-    "token": ""
+    "token": "",
+    "password": "",
   }));
   console.log(chalk.redBright('Go to secrets.json and add your token and there.'));
   process.exit();
@@ -55,6 +61,7 @@ if (!fs.existsSync('./conf.json')) {
 }
 
 const bot_token = require('./secrets.json').token || process.env.token;
+const dash_password = require('./secrets.json').password || process.env.password;
 const { 
   bot_prefix, 
   owner_main_id, 
@@ -72,16 +79,22 @@ const db = require('./database.json');
 
 app.enable("trust proxy");
 app.set('etag', false);
-app.use(express.static(__dirname + './'));
+app.use(require('express').static(__dirname + './'));
 
 app.use((req, res, next) => {
   console.log(chalk.blueBright(`${req.method}: ${req.url} from ${req.ip}`));
   next();
 });
 
-app.get('/', (req, res) => {
+app.get('/dash/' + dash_password, (req, res) => {
+  let dash = fs.readFileSync('./dash.html', { encoding: 'utf8' });
+  dash = dash.replace('$$username$$', client.user.username);
+  res.send(dash);
+});
+
+app.get('/stats', (req, res) => {
   db.page_views++;
-  let stats = fs.readFileSync('./dash.html', { encoding: 'utf8' });
+  let stats = fs.readFileSync('./stats.html', { encoding: 'utf8' });
   stats = stats.replace('$$avatar$$', client.user.avatarURL());
   stats = stats.replace('$$username$$', client.user.username);
   stats = stats.replace('$$client-id$$', client.user.id);
@@ -105,6 +118,25 @@ app.listen(server_port, () => {
   console.log(chalk.greenBright(`Listening on port ${server_port}!`));
 });
 
+if (io) {
+  console.log(chalk.greenBright('Socket.io is online on port 5000!'));
+} else {
+  console.log(chalk.redBright('Socket.io is offline'));
+  process.exit();
+}
+
+io.on('connection', socket => {
+  console.log(chalk.blueBright('Server Connected To ' + socket.id));
+  io.on('code-eval', data => {
+    console.log(chalk.blueBright('Code Evaluation: ' + data));
+    try {
+      console.log(chalk.greenBright('Result: ' + eval(data)));
+    } catch (e) {
+      console.log(chalk.redBright('Error: ' + e));
+    }
+  })
+});
+
 client.on('ready', () => {
   console.log(chalk.greenBright(`Logged in as ${client.user.tag}!`));
   client.user.setActivity(status_text, { type: status_type });
@@ -112,11 +144,11 @@ client.on('ready', () => {
 });
 
 client.on('guildCreate', guild => {
-  client.channels.cache.get(log_channel_id).send(`Bot joined guild: ${guild.name}`);
+  client.channels.cache.get(log_channel_id).send(`Bot joined guild: ${guild.name} (${guild.id})`);
 });
 
 client.on('guildDelete', guild => {
-  client.channels.cache.get(log_channel_id).send(`Bot left guild: ${guild.name}`);
+  client.channels.cache.get(log_channel_id).send(`Bot left guild: ${guild.name} (${guild.id})`);
 });
 
 client.on('message', msg => {
@@ -127,7 +159,21 @@ client.on('message', msg => {
   if (msg.content.startsWith(bot_prefix)) {
     if (!msg.guild.me.hasPermission("ADMINISTRATOR")) return msg.channel.send('Error: I need permisions, run `' + bot_prefix + 'perms`');
     db.cmds_used++;
-    client.channels.cache.get(log_channel_id).send(`${msg.author.username}: ${msg.content}`);
+    client.channels.cache.get(log_channel_id).send(`${msg.author.tag}: "${msg.content}" in ${msg.channel.id}`);
+  }
+  if (msg.content.startsWith(bot_prefix + 'geninvite')) {
+    let arg = msg.content.split(' ')[1];
+    if (!msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
+      msg.channel.send('You do not have permission to run this command.');
+    } else {
+      client.channels.cache.get(arg).createInvite({
+        'temporary': true,
+        'maxAge': 604800,
+        'maxUses': 1
+      }).then(invite => {
+        msg.channel.send(invite.url);
+      })
+    }
   }
   if (msg.content === `${bot_prefix}cmdsused`) {
     msg.channel.send(`Total commands used: ${db.cmds_used}`);
@@ -232,7 +278,7 @@ client.on('message', msg => {
     if (msg.content.includes('@everyone') || msg.content.includes('@here') || msg.content.includes('<@&')) {
       msg.channel.send('You cannot use @/everyone, @/here, or ping roles in this command.');
     } else {
-      msg.channel.send(msg.content.slice(bot_prefix.length + 4));
+      msg.channel.send(msg.author.tag + ': ' + msg.content.slice(bot_prefix.length + 4));
     }
   }
   if (msg.content === bot_prefix + 'avatar') {
@@ -710,6 +756,10 @@ client.on('message', msg => {
               inline: true
             },
             {
+              name: bot_prefix + "geninvite <channel-id>",
+              value: `Generates an invite from a server.`,
+            },
+            {
               name: bot_prefix + "eval <code>",
               value: `Evaluates a code.`,
               inline: true
@@ -875,7 +925,7 @@ client.on('message', msg => {
           },
           {
             name: "Links",
-            value: "[Bot Stats](https://cat.sx9.is-a.dev) | [Vote Me On Top.gg](https://top.gg/bot/" + client.user.id + "/vote) | [Invite Me](https://discordapp.com/oauth2/authorize?client_id=" + client.user.id + "scope=bot&permissions=8) | [Support Server](https://discord.gg/723897885869058688) | [Github Source](https://github.com/SX-9/sx-discord-bot) | [Website](https://sx9.is-a.dev)",
+            value: "[Bot Stats](https://cat.sx9.is-a.dev) | [Vote Me On Top.gg](https://top.gg/bot/" + client.user.id + "/vote) | [Invite Me](https://discordapp.com/oauth2/authorize?client_id=" + client.user.id + "&permissions=8&scope=bot) | [Support Server](https://discord.gg/723897885869058688) | [Github Source](https://github.com/SX-9/sx-discord-bot) | [Website](https://sx9.is-a.dev)",
           }
         ],
         timestamp: new Date(),
@@ -913,13 +963,7 @@ client.on('messageDelete', (msg) => {
   client.channels.cache.get(log_channel_id).send({embed: {
     color: 'RED',
     title: "Message Deleted",
-    description: 'A message has been deleted!',
-    fields: [
-      {
-        name: 'Message',
-        value: "```" + msg.content + "```"
-      }
-    ],
+    description: 'A message has been deleted!\nContent: ' + msg.content + '\nUser: ' + msg.author.tag + ' (' + msg.author.id + ')\nServer:' + msg.guild.name + '\nChannel ID' + msg.channel.id,
     timestamp: new Date(),
     footer: {
       text: "sx9.is-a.dev",
@@ -931,7 +975,7 @@ client.on('guildMemberAdd', member => {
   client.channels.cache.get(log_channel_id).send({embed: {
     color: embed_color,
     title: "Member Joined",
-    description: `${member.user.tag} has joined the server.`,
+    description: `${member.user.tag} has joined the server ${member.guild.name} (${member.guild.id}).`,
     timestamp: new Date(),
     footer: {
       text: "sx9.is-a.dev",
@@ -943,7 +987,7 @@ client.on('guildMemberRemove', member => {
   client.channels.cache.get(log_channel_id).send({embed: {
     color: embed_color,
     title: "Member Left",
-    description: `${member.user.tag} has left the server.`,
+    description: `${member.user.tag} has left the server ${member.guild.name} (${member.guild.id}).`,
     timestamp: new Date(),
     footer: {
       text: "sx9.is-a.dev",
