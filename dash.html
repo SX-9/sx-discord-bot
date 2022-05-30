@@ -34,11 +34,18 @@
             border-radius: 10% 10% 10% 10%;
         }
     </style>
-    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous"></script>
+    <script derfer src="http://localhost:5000/socket.io/socket.io.js"></script>
     <script defer>
-        const io = io('http://localhost:5000');
+        var io = io('http://localhost:5000', {
+            transports: ["websocket", "polling"]
+        });
+
         io.on('connect', () => {
             console.log('Connected To Server!');
+            io.on('code-output', (data) => {
+                console.log('Message Received: ' + data);
+                document.getElementById('output').innerHTML = data;
+            });
         });
 
         function evalCode() {
@@ -58,6 +65,8 @@
     <label>Code Eval:</label>
     <input type="text" id="code" placeholder="Enter JS Code Here!">
     <button onclick="evalCode()">Evaluate Code</button>
+    <br>
+    <p>Output: <span id="output">Waiting For A Response...</span></p>
     <p>Made by <a href="https://sx9.is-a.dev"><span>sx9.is-a.dev</span></a></p>
 </body>
 </html>

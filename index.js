@@ -7,7 +7,7 @@ const os = require("os");
 const chalk = require('chalk');
 const io = require('socket.io')(5000, {
   cors: { 
-    origin: '*',
+    origin: 'http://localhost:3000',
     methods: ['POST']
   } 
 });
@@ -130,11 +130,16 @@ io.on('connection', socket => {
   io.on('code-eval', data => {
     console.log(chalk.blueBright('Code Evaluation: ' + data));
     try {
-      console.log(chalk.greenBright('Result: ' + eval(data)));
+      console.log(chalk.greenBright('Sending Result...'));
+      socket.emit('code-output', 'Result: ' + eval(data));
     } catch (e) {
       console.log(chalk.redBright('Error: ' + e));
+      socket.emit('code-output', 'Error: ' + e);
     }
   })
+  io.on('disconnect', () => {
+    console.log(chalk.yellowBright('Server Disconnected From ' + socket.id));
+  });
 });
 
 client.on('ready', () => {
@@ -230,7 +235,7 @@ client.on('message', msg => {
         fields: [
           {
             name: "Servers",
-            value: `> ${client.guilds.cache.map(g => g.name).join("\n> ")}`,
+            value: `> ${client.guilds.cache.map(g => g.name ).join("\n> ")}`,
             inline: true
           },
           {
@@ -963,7 +968,7 @@ client.on('messageDelete', (msg) => {
   client.channels.cache.get(log_channel_id).send({embed: {
     color: 'RED',
     title: "Message Deleted",
-    description: 'A message has been deleted!\nContent: ' + msg.content + '\nUser: ' + msg.author.tag + ' (' + msg.author.id + ')\nServer:' + msg.guild.name + '\nChannel ID' + msg.channel.id,
+    description: 'A message has been deleted!\nContent: ' + msg.content + '\nUser: ' + msg.author.tag + ' (' + msg.author.id + ')\nServer:' + msg.guild.name + '\nChannel ID: ' + msg.channel.id,
     timestamp: new Date(),
     footer: {
       text: "sx9.is-a.dev",
@@ -996,7 +1001,11 @@ client.on('guildMemberRemove', member => {
 });
 
 process.on('unhandledRejection', (error) => {
-  client.channels.cache.get(log_channel_id).send(error.message)
+  try {
+    client.channels.cache.get(log_channel_id).send(error.message)
+  } catch (e) {
+    console.log(error.message)
+  }
 });
 
 client.login(bot_token);
