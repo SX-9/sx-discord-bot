@@ -964,47 +964,11 @@ client.on('error', (error) => {
 client.on("warn", console.warn);
 client.on("error", console.error);
 
-client.on('messageDelete', (msg) => {
-  client.channels.cache.get(log_channel_id).send({embed: {
-    color: 'RED',
-    title: "Message Deleted",
-    description: 'A message has been deleted!\nContent: ' + msg.content + '\nUser: ' + msg.author.tag + ' (' + msg.author.id + ')\nServer:' + msg.guild.name + '\nChannel ID: ' + msg.channel.id,
-    timestamp: new Date(),
-    footer: {
-      text: "sx9.is-a.dev",
-    }
-  }});
-});
-
-client.on('guildMemberAdd', member => {
-  client.channels.cache.get(log_channel_id).send({embed: {
-    color: embed_color,
-    title: "Member Joined",
-    description: `${member.user.tag} has joined the server ${member.guild.name} (${member.guild.id}).`,
-    timestamp: new Date(),
-    footer: {
-      text: "sx9.is-a.dev",
-    }
-  }});
-});
-
-client.on('guildMemberRemove', member => {
-  client.channels.cache.get(log_channel_id).send({embed: {
-    color: embed_color,
-    title: "Member Left",
-    description: `${member.user.tag} has left the server ${member.guild.name} (${member.guild.id}).`,
-    timestamp: new Date(),
-    footer: {
-      text: "sx9.is-a.dev",
-    }
-  }});
-});
-
 process.on('unhandledRejection', (error) => {
   try {
     client.channels.cache.get(log_channel_id).send(error.message)
   } catch (e) {
-    console.log(error.message)
+    console.log(chalk.yellowBright(error.message));
   }
 });
 

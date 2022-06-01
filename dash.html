@@ -42,10 +42,11 @@
 
         io.on('connect', () => {
             console.log('Connected To Server!');
-            io.on('code-output', (data) => {
-                console.log('Message Received: ' + data);
-                document.getElementById('output').innerHTML = data;
-            });
+        });
+
+        io.on('code-output', (data) => {
+            console.log('Message Received: ' + data);
+            document.getElementById('output').innerHTML = data;
         });
 
         function evalCode() {
