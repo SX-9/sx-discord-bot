@@ -8,7 +8,7 @@ const chalk = require('chalk');
 const io = require('socket.io')(5000, {
   cors: { 
     origin: 'http://localhost:3000',
-    methods: ['POST']
+    methods: ['GET', 'POST']
   } 
 });
 
@@ -32,7 +32,7 @@ if (!fs.existsSync('./secrets.json')) {
     "token": "",
     "password": "",
   }));
-  console.log(chalk.redBright('Go to secrets.json and add your token and there.'));
+  console.log(chalk.redBright('Go to secrets.json and add your token and password there.'));
   process.exit();
 } else {
   console.log(chalk.greenBright('Loaded secrets.json'));
