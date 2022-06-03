@@ -92,7 +92,7 @@ app.get('/dash/' + dash_password, (req, res) => {
   res.send(dash);
 });
 
-app.get('/stats', (req, res) => {
+app.get('/', (req, res) => {
   db.page_views++;
   let stats = fs.readFileSync('./stats.html', { encoding: 'utf8' });
   stats = stats.replace('$$avatar$$', client.user.avatarURL());
@@ -160,6 +160,7 @@ client.on('message', msg => {
   if (msg.author.bot) return;
   if (msg.content === `${bot_prefix}perms`) {
     msg.channel.send('I need the ADMINISTRATOR permission to run properly.');
+    return;
   }
   if (msg.content.startsWith(bot_prefix)) {
     if (!msg.guild.me.hasPermission("ADMINISTRATOR")) return msg.channel.send('Error: I need permisions, run `' + bot_prefix + 'perms`');
