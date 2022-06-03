@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "nodemon": "nodemon index.js --ext js,html,json",
+    "test": "nodemon index.js -e js,html,json -i database.json",
     "shard": "node shard.js"
   },
   "repository": {

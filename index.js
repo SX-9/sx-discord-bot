@@ -93,6 +93,14 @@ app.get('/dash/' + dash_password, (req, res) => {
 });
 
 app.get('/', (req, res) => {
+  fs.writeFileSync('./database.json', JSON.stringify({
+    "cmds_used": db.cmds_used,
+    "page_views": db.page_views + 1,
+    "bot_rps_wins": db.bot_rps_wins,
+    "bot_rps_losses": db.bot_rps_losses,
+    "cats_gathered": db.cats_gathered,
+    "rickrolls": db.rickrolls,
+  }));
   db.page_views++;
   let stats = fs.readFileSync('./stats.html', { encoding: 'utf8' });
   stats = stats.replace('$$avatar$$', client.user.avatarURL());
@@ -117,13 +125,6 @@ app.get('/', (req, res) => {
 app.listen(server_port, () => {
   console.log(chalk.greenBright(`Listening on port ${server_port}!`));
 });
-
-if (io) {
-  console.log(chalk.greenBright('Socket.io is online on port 5000!'));
-} else {
-  console.log(chalk.redBright('Socket.io is offline'));
-  process.exit();
-}
 
 io.on('connection', socket => {
   console.log(chalk.blueBright('Server Connected To ' + socket.id));
@@ -164,6 +165,14 @@ client.on('message', msg => {
   }
   if (msg.content.startsWith(bot_prefix)) {
     if (!msg.guild.me.hasPermission("ADMINISTRATOR")) return msg.channel.send('Error: I need permisions, run `' + bot_prefix + 'perms`');
+    fs.writeFileSync('./database.json', JSON.stringify({
+      "cmds_used": db.cmds_used + 1,
+      "page_views": db.page_views,
+      "bot_rps_wins": db.bot_rps_wins,
+      "bot_rps_losses": db.bot_rps_losses,
+      "cats_gathered": db.cats_gathered,
+      "rickrolls": db.rickrolls,
+    }));
     db.cmds_used++;
     client.channels.cache.get(log_channel_id).send(`${msg.author.tag}: "${msg.content}" in ${msg.channel.id}`);
   }
@@ -389,9 +398,25 @@ client.on('message', msg => {
     }
     if (arg === ':rock:' && pick === ':scissors:' || arg === ':newspaper:' && pick === ':rock:' || arg === ':scissors:' && pick === ':newspaper:') {
       text = 'You win!';
+      fs.writeFileSync('./database.json', JSON.stringify({
+        "cmds_used": db.cmds_used,
+        "page_views": db.page_views,
+        "bot_rps_wins": db.bot_rps_wins,
+        "bot_rps_losses": db.bot_rps_losses + 1,
+        "cats_gathered": db.cats_gathered,
+        "rickrolls": db.rickrolls,
+      }))
       db.bot_rps_losses++;
     } else {
       text = 'You lose!'; 
+      fs.writeFileSync('./database.json', JSON.stringify({
+        "cmds_used": db.cmds_used,
+        "page_views": db.page_views,
+        "bot_rps_wins": db.bot_rps_wins + 1,
+        "bot_rps_losses": db.bot_rps_losses,
+        "cats_gathered": db.cats_gathered,
+        "rickrolls": db.rickrolls,
+      }));
       db.bot_rps_wins++;
     }
     if (arg === pick) {
@@ -441,6 +466,14 @@ client.on('message', msg => {
     }});
   }
   if (msg.content === bot_prefix + 'cat') {
+    fs.writeFileSync('./database.json', JSON.stringify({
+      "cmds_used": db.cmds_used,
+      "page_views": db.page_views,
+      "bot_rps_wins": db.bot_rps_wins,
+      "bot_rps_losses": db.bot_rps_losses,
+      "cats_gathered": db.cats_gathered + 1,
+      "rickrolls": db.rickrolls,
+    }));
     db.cats_gathered++;
     fetch('https://api.thecatapi.com/v1/images/search') 
     .then(res => res.json())
@@ -474,6 +507,14 @@ client.on('message', msg => {
       msg.channel.send("You need to mention someone to rickroll them. Since you didn't, I'll rickroll you later ;)");
     } else {
       user.send(`You recived a message from someone...\nMessage: ||Never Gonna Give You Up Never Gonna Let You Down Never Gonna Run Around And Desert You||`);
+      fs.writeFileSync('./database.json', JSON.stringify({
+        "cmds_used": db.cmds_used,
+        "page_views": db.page_views,
+        "bot_rps_wins": db.bot_rps_wins,
+        "bot_rps_losses": db.bot_rps_losses,
+        "cats_gathered": db.cats_gathered,
+        "rickrolls": db.rickrolls + 1,
+      }));
       db.rickrolls++;
       msg.channel.send('Rickroll sent to ' + user.tag + '!\nTotal rickrolls sent: ' + db.rickrolls);
     }
