@@ -77,7 +77,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/dash/' + settings.secrets.password, (req, res) => {
+app.get('/dash/' + settings.secrets.password || process.env.password, (req, res) => {
   let dash = fs.readFileSync('./dash.html', { encoding: 'utf8' });
   dash = dash.replace('$$username$$', client.user.username);
   if (settings.web.dash === true) {
@@ -1009,4 +1009,4 @@ process.on('unhandledRejection', (error) => {
   }
 });
 
-client.login(settings.secrets.token);
+client.login(settings.secrets.token || process.env.token);
