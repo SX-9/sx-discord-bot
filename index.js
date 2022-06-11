@@ -26,55 +26,46 @@ if (!fs.existsSync('./database.json')) {
   console.log(chalk.greenBright('Loaded database.json'));
 }
 
-if (!fs.existsSync('./secrets.json')) {
-  console.log(chalk.yellowBright('Not found secrets.json, creating...'));
-  fs.writeFileSync('./secrets.json', JSON.stringify({
-    "token": "",
-    "password": "",
+if (!fs.existsSync('./settings.json')) {
+  console.log(chalk.yellowBright('Not found settings.json, creating...'));
+  fs.writeFileSync('./settings.json', JSON.stringify({
+    "secrets": {
+        "token": "",
+        "password": ""
+    },
+    "config": {
+        "bot": {
+            "prefix": "sx!",
+            "shards": 200,
+            "color": "#00e1ff",
+            "logs": "963713518966808587",
+            "owners": {
+                "main": "882595027132493864",
+                "alt": "916880217329516604"
+            },
+            "emojis": {
+                "yes": "975216960449151006",
+                "no": "975216906841780285",
+                "random": "975216920955596880"
+            },
+            "status": {
+                "text": "sx!help | cat.sx9.is-a.dev",
+                "type": "LISTENING"
+            }
+        },
+        "web": {
+            "port": 3000,
+            "dash": true
+        }
+    }
   }));
-  console.log(chalk.redBright('Go to secrets.json and add your token and password there.'));
+  console.log(chalk.redBright('Go to settings.json and add your prefix, owner id, log channel id, and other stuff.'));
   process.exit();
 } else {
-  console.log(chalk.greenBright('Loaded secrets.json'));
+  console.log(chalk.greenBright('Loaded settings.json'));
 }
 
-if (!fs.existsSync('./conf.json')) {
-  console.log(chalk.yellowBright('Not found conf.json, creating...'));
-  fs.writeFileSync('./conf.json', JSON.stringify({
-    "bot_prefix": "sx!",
-    "log_channel_id": "963713518966808587",
-    "owner_main_id": '882595027132493864',
-    "owner_alt_id": '916880217329516604',
-    "status_text": 'sx!help | cat.sx9.is-a.dev',
-    "status_type": 'LISTENING',
-    "embed_color": '#00e1ff',
-    "yes_emoji_id": '975216960449151006',
-    "no_emoji_id": '975216906841780285',
-    "random_emoji_id": '975216920955596880',
-    "server_port": 3000,
-    "total_shards": 200,
-  }));
-  console.log(chalk.redBright('Go to conf.json and add your prefix, owner id, log channel id, and other stuff.'));
-  process.exit();
-} else {
-  console.log(chalk.greenBright('Loaded conf.json'));
-}
-
-const bot_token = require('./secrets.json').token || process.env.token;
-const dash_password = require('./secrets.json').password || process.env.password;
-const { 
-  bot_prefix, 
-  owner_main_id, 
-  owner_alt_id, 
-  log_channel_id, 
-  status_text, 
-  status_type, 
-  embed_color, 
-  yes_emoji_id, 
-  no_emoji_id, 
-  random_emoji_id,
-  server_port 
-} = require('./conf.json');
+const settings = require('./settings.json');
 const db = require('./database.json');
 
 app.enable("trust proxy");
@@ -86,10 +77,14 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/dash/' + dash_password, (req, res) => {
+app.get('/dash/' + settings.secrets.password, (req, res) => {
   let dash = fs.readFileSync('./dash.html', { encoding: 'utf8' });
   dash = dash.replace('$$username$$', client.user.username);
-  res.send(dash);
+  if (settings.web.dash === true) {
+    res.send(dash);
+  } else {
+    res.send('<h1>Dashboard is disabled!</h1>');
+  }
 });
 
 app.get('/', (req, res) => {
@@ -122,8 +117,8 @@ app.get('/', (req, res) => {
   res.send(stats)
   res.json();
 });
-app.listen(server_port, () => {
-  console.log(chalk.greenBright(`Listening on port ${server_port}!`));
+app.listen(settings.config.web.port, () => {
+  console.log(chalk.greenBright(`Listening on port ${settings.config.web.port}!`));
 });
 
 io.on('connection', socket => {
@@ -145,26 +140,26 @@ io.on('connection', socket => {
 
 client.on('ready', () => {
   console.log(chalk.greenBright(`Logged in as ${client.user.tag}!`));
-  client.user.setActivity(status_text, { type: status_type });
-  client.channels.cache.get(log_channel_id).send('Bot is online!');
+  client.user.setActivity(settings.config.bot.status.text, { type: settings.config.bot.status.type });
+  client.channels.cache.get(settings.config.bot.logs).send('Bot is online!');
 });
 
 client.on('guildCreate', guild => {
-  client.channels.cache.get(log_channel_id).send(`Bot joined guild: ${guild.name} (${guild.id})`);
+  client.channels.cache.get(settings.config.bot.logs).send(`Bot joined guild: ${guild.name} (${guild.id})`);
 });
 
 client.on('guildDelete', guild => {
-  client.channels.cache.get(log_channel_id).send(`Bot left guild: ${guild.name} (${guild.id})`);
+  client.channels.cache.get(settings.config.bot.logs).send(`Bot left guild: ${guild.name} (${guild.id})`);
 });
 
 client.on('message', msg => {
   if (msg.author.bot) return;
-  if (msg.content === `${bot_prefix}perms`) {
+  if (msg.content === `${settings.config.bot.prefix}perms`) {
     msg.channel.send('I need the ADMINISTRATOR permission to run properly.');
     return;
   }
-  if (msg.content.startsWith(bot_prefix)) {
-    if (!msg.guild.me.hasPermission("ADMINISTRATOR")) return msg.channel.send('Error: I need permisions, run `' + bot_prefix + 'perms`');
+  if (msg.content.startsWith(settings.config.bot.prefix)) {
+    if (!msg.guild.me.hasPermission("ADMINISTRATOR")) return msg.channel.send('Error: I need permisions, run `' + settings.config.bot.prefix + 'perms`');
     fs.writeFileSync('./database.json', JSON.stringify({
       "cmds_used": db.cmds_used + 1,
       "page_views": db.page_views,
@@ -174,11 +169,11 @@ client.on('message', msg => {
       "rickrolls": db.rickrolls,
     }));
     db.cmds_used++;
-    client.channels.cache.get(log_channel_id).send(`${msg.author.tag}: "${msg.content}" in ${msg.channel.id}`);
+    client.channels.cache.get(settings.config.bot.logs).send(`${msg.author.tag}: "${msg.content}" in ${msg.channel.id}`);
   }
-  if (msg.content.startsWith(bot_prefix + 'geninvite')) {
+  if (msg.content.startsWith(settings.config.bot.prefix + 'geninvite')) {
     let arg = msg.content.split(' ')[1];
-    if (!msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
+    if (!msg.author.id === settings.config.bot.owners.main || msg.author.id === settings.config.bot.owners.alt) {
       msg.channel.send('You do not have permission to run this command.');
     } else {
       client.channels.cache.get(arg).createInvite({
@@ -190,16 +185,16 @@ client.on('message', msg => {
       })
     }
   }
-  if (msg.content === `${bot_prefix}cmdsused`) {
+  if (msg.content === `${settings.config.bot.prefix}cmdsused`) {
     msg.channel.send(`Total commands used: ${db.cmds_used}`);
   }
-  if (msg.content === `${bot_prefix}vote`) {
+  if (msg.content === `${settings.config.bot.prefix}vote`) {
     msg.channel.send(`https://top.gg/bot/${client.user.id}/`);
   }
-  if (msg.content === `${bot_prefix}meme`) {
+  if (msg.content === `${settings.config.bot.prefix}meme`) {
     fetch('https://meme-api.herokuapp.com/gimme').then(res => res.json()).then(json => {
       msg.channel.send({ embed: {
-        color: embed_color,
+        color: settings.config.bot.color,
         title: json.title,
         description: json.postLink,
         image: {
@@ -208,38 +203,38 @@ client.on('message', msg => {
       }});
     });
   }
-  if (msg.content.startsWith(`${bot_prefix}status`)) {
-    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
+  if (msg.content.startsWith(`${settings.config.bot.prefix}status`)) {
+    if (msg.author.id === settings.config.bot.owners.main || msg.author.id === settings.config.bot.owners.alt) {
       const args = msg.content.split(' ');
       if (args[1] === 'reset') {
-        client.user.setActivity(status_text, { type: status_type });
+        client.user.setActivity(settings.config.bot.status.text, { type: settings.config.bot.status.type });
         msg.channel.send(`Status reset!`);
       } else {
-        client.user.setActivity(args.slice(1).join(' '), { type: status_type });
+        client.user.setActivity(args.slice(1).join(' '), { type: settings.config.bot.status.type });
         msg.channel.send(`Status set to: ${args.slice(1).join(' ')}`);
       }
     } else {
       msg.channel.send(`You don't have permission to use this command!`);
     }
   }
-  if (msg.content === `${bot_prefix}jointester`) {
+  if (msg.content === `${settings.config.bot.prefix}jointester`) {
     msg.channel.send({ embed: {
-      color: embed_color,
+      color: settings.config.bot.color,
       title: 'How to join the testers:',
-      description: 'Join the testers by joining the [community server](https://discord.gg/Z98auctczm) and say ``<@!' + owner_main_id + '> JoinTesters101``)!',
+      description: 'Join the testers by joining the [community server](https://discord.gg/Z98auctczm) and say ``<@!' + settings.config.bot.owners.main + '> JoinTesters101``)!',
       footer: {
         text: 'sx9.is-a.dev'
       }
     }});
   }
-  if (msg.content.startsWith(bot_prefix + 'random')) {
+  if (msg.content.startsWith(settings.config.bot.prefix + 'random')) {
     let random_number = Math.floor(Math.random() * 9000000) + 1;
     msg.channel.send(`Your random number is ${random_number} out of 9,000,000.`);
   }
-  if (msg.content === `${bot_prefix}serverlist`) {
-    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
+  if (msg.content === `${settings.config.bot.prefix}serverlist`) {
+    if (msg.author.id === settings.config.bot.owners.main || msg.author.id === settings.config.bot.owners.alt) {
       msg.author.send({ embed: {
-        color: embed_color,
+        color: settings.config.bot.color,
         title: "Server List",
         description: "Here is a list of all the servers I am in.",
         fields: [
@@ -262,11 +257,11 @@ client.on('message', msg => {
   if (msg.channel.type === 'dm') {
     console.log(chalk.blueBright(`${msg.author.tag}: ${msg.content}`));
     msg.react('📧');
-    client.channels.cache.get(log_channel_id).send(`${msg.author.tag}: ${msg.content}`)
+    client.channels.cache.get(settings.config.bot.logs).send(`${msg.author.tag}: ${msg.content}`)
   }
-  if (msg.content === bot_prefix + 'ping') {
+  if (msg.content === settings.config.bot.prefix + 'ping') {
     msg.channel.send({ embed: {
-      color: embed_color,
+      color: settings.config.bot.color,
       title: 'Pong! :ping_pong:',
       description: `${client.ws.ping}ms Response time`,
       fields: [
@@ -276,7 +271,7 @@ client.on('message', msg => {
           inline: true
         },
         {
-          name: 'CPU Usage',
+          name: 'CPU Name',
           value: `${os.cpus()[0].model}`,
           inline: true
         },
@@ -289,16 +284,16 @@ client.on('message', msg => {
       ]
     }});
   }
-  if (msg.content.startsWith(bot_prefix + 'say')) {
+  if (msg.content.startsWith(settings.config.bot.prefix + 'say')) {
     if (msg.content.includes('@everyone') || msg.content.includes('@here') || msg.content.includes('<@&')) {
       msg.channel.send('You cannot use @/everyone, @/here, or ping roles in this command.');
     } else {
-      msg.channel.send(msg.author.tag + ': ' + msg.content.slice(bot_prefix.length + 4));
+      msg.channel.send(msg.author.tag + ': ' + msg.content.slice(settings.config.bot.prefix.length + 4));
     }
   }
-  if (msg.content === bot_prefix + 'avatar') {
+  if (msg.content === settings.config.bot.prefix + 'avatar') {
     msg.channel.send({embed: {
-        color: embed_color,
+        color: settings.config.bot.color,
         title: `${msg.author.username}'s Avatar`,
         description: "Here's your avatar!",
         image: {
@@ -310,82 +305,82 @@ client.on('message', msg => {
         }
     }});
   }
-  if (msg.content === bot_prefix + 'react') {
-    msg.react(random_emoji_id);
+  if (msg.content === settings.config.bot.prefix + 'react') {
+    msg.react(settings.config.bot.emojis.random);
   }
-  if (msg.content.startsWith(bot_prefix + 'poll')) {
-    msg.react(yes_emoji_id);
-    msg.react(no_emoji_id);
+  if (msg.content.startsWith(settings.config.bot.prefix + 'poll')) {
+    msg.react(settings.config.bot.emojis.yes);
+    msg.react(settings.config.bot.emojis.no);
   }
-  if (msg.content.startsWith(bot_prefix + 'kill')) {
-    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
-      msg.react(yes_emoji_id);
-      client.channels.cache.get(log_channel_id).send(`${msg.author.tag} has killed the bot.`);
+  if (msg.content.startsWith(settings.config.bot.prefix + 'kill')) {
+    if (msg.author.id === settings.config.bot.owners.main || msg.author.id === settings.config.bot.owners.alt) {
+      msg.react(settings.config.bot.emojis.yes);
+      client.channels.cache.get(settings.config.bot.logs).send(`${msg.author.tag} has killed the bot.`);
       console.log(chalk.redBright('Bot killed by ' + msg.author.tag));
       setTimeout(() => {
         process.exit(0);
       }, 3000);
     } else {
-      msg.react(no_emoji_id)
+      msg.react(settings.config.bot.emojis.no)
       msg.channel.send('You are not the owner of this bot.');
     }
   }
-  if (msg.content === bot_prefix + 'dm') {
+  if (msg.content === settings.config.bot.prefix + 'dm') {
     msg.channel.send('You have been dmed.');
     msg.author.send('Hello There!');
   }
-  if (msg.content === bot_prefix + 'token') {
-    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
-      msg.react(yes_emoji_id);
+  if (msg.content === settings.config.bot.prefix + 'token') {
+    if (msg.author.id === settings.config.bot.owners.main || msg.author.id === settings.config.bot.owners.alt) {
+      msg.react(settings.config.bot.emojis.yes);
       msg.channel.send('Check your DMs!');
-      msg.author.send("```" + bot_token + "```");
+      msg.author.send("```" + settings.secrets.token + "```");
     } else {
-      msg.react(no_emoji_id);
+      msg.react(settings.config.bot.emojis.no);
       msg.channel.send('You do not have permission to use this command.');
     }
   }
-  if (msg.content.startsWith(bot_prefix + 'owner')) {
-    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
+  if (msg.content.startsWith(settings.config.bot.prefix + 'owner')) {
+    if (msg.author.id === settings.config.bot.owners.main || msg.author.id === settings.config.bot.owners.alt) {
       msg.channel.send('Owner: True');
     } else {
-      msg.react(no_emoji_id);
+      msg.react(settings.config.bot.emojis.no);
       msg.channel.send('Owner: False');
     }
   }
-  if (msg.content.startsWith(bot_prefix + 'setname')) {
-    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
-      client.user.setUsername(msg.content.slice(bot_prefix.length + 8));
-      msg.react(yes_emoji_id);
+  if (msg.content.startsWith(settings.config.bot.prefix + 'setname')) {
+    if (msg.author.id === settings.config.bot.owners.main || msg.author.id === settings.config.bot.owners.alt) {
+      client.user.setUsername(msg.content.slice(settings.config.bot.prefix.length + 8));
+      msg.react(settings.config.bot.emojis.yes);
       msg.channel.send('Done!');
     } else {
-      msg.react(no_emoji_id);
+      msg.react(settings.config.bot.emojis.no);
       msg.channel.send('You do not have permission to use this command.');
     }
   }
-  if (msg.content.startsWith(bot_prefix + 'setpfp')) {
-    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
+  if (msg.content.startsWith(settings.config.bot.prefix + 'setpfp')) {
+    if (msg.author.id === settings.config.bot.owners.main || msg.author.id === settings.config.bot.owners.alt) {
       msg.channel.send('Avatar changed.');
-      client.user.setAvatar(msg.content.slice(bot_prefix.length + 7));
+      client.user.setAvatar(msg.content.slice(settings.config.bot.prefix.length + 7));
     } else {
-      msg.react(no_emoji_id);
+      msg.react(settings.config.bot.emojis.no);
       msg.channel.send('You do not have permission to use this command.');
     }
   }
-  if (msg.content.startsWith(bot_prefix + 'log')) {
-    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
+  if (msg.content.startsWith(settings.config.bot.prefix + 'log')) {
+    if (msg.author.id === settings.config.bot.owners.main || msg.author.id === settings.config.bot.owners.alt) {
       msg.channel.send('Logged.');
-      console.log(chalk.yellowBright(msg.content.slice(bot_prefix.length + 4)));
-      client.channels.cache.get(log_channel_id).send(msg.content.slice(bot_prefix.length + 4));
+      console.log(chalk.yellowBright(msg.content.slice(settings.config.bot.prefix.length + 4)));
+      client.channels.cache.get(settings.config.bot.logs).send(msg.content.slice(settings.config.bot.prefix.length + 4));
     } else {
-      msg.react(no_emoji_id);
+      msg.react(settings.config.bot.emojis.no);
       msg.channel.send('You do not have permission to use this command.');
     }
   }
   
-  if (msg.content.startsWith(bot_prefix + 'rps')) {
+  if (msg.content.startsWith(settings.config.bot.prefix + 'rps')) {
     let choices = [':rock:', ':newspaper:', ':scissors:'];
     let pick = choices[Math.floor(Math.random() * choices.length)];
-    let arg = msg.content.slice(bot_prefix.length + 4).toLocaleLowerCase();
+    let arg = msg.content.slice(settings.config.bot.prefix.length + 4).toLocaleLowerCase();
     let text = ''; 
     if (arg === 'rock' || arg === 'r') {
       arg = ':rock:';
@@ -426,7 +421,7 @@ client.on('message', msg => {
       msg.channel.send('Valid choices are: ``rock``, ``paper``, ``scissors``.\nShortcuts are: ``r``, ``p``, and ``s``.');
     } else {
       msg.channel.send({embed: {
-          color: embed_color,
+          color: settings.config.bot.color,
           title: "RPS Game Results",
           description: `You choose ${arg} and the bot choose ${pick}. ${text}`,
           fields: [
@@ -452,12 +447,12 @@ client.on('message', msg => {
       }});
     }
   }
-  if (msg.content.startsWith(bot_prefix + '8ball')) {
-    let arg = msg.content.slice(bot_prefix.length + 5);
+  if (msg.content.startsWith(settings.config.bot.prefix + '8ball')) {
+    let arg = msg.content.slice(settings.config.bot.prefix.length + 5);
     let choices = ['It is certain.', 'It is decidedly so.', 'Without a doubt.', 'Yes - definitely.', 'You may rely on it.', 'As I see it, yes.', 'Most likely.', 'Outlook good.', 'Yes.', 'Signs point to yes.', 'Reply hazy, try again.', 'Ask again later.', 'Better not tell you now.', 'Cannot predict now.', 'Concentrate and ask again.', 'Don\'t count on it.', 'My reply is no.', 'My sources say no.', 'Outlook not so good.', 'Very doubtful.'];
     let pick = choices[Math.floor(Math.random() * choices.length)];
     msg.channel.send({embed: {
-      color: embed_color,
+      color: settings.config.bot.color,
       title: "Magic 8 Ball",
       description: `${msg.author.tag} asked: ${arg}\n8ball: ${pick}`,
       footer: {
@@ -465,7 +460,7 @@ client.on('message', msg => {
       }
     }});
   }
-  if (msg.content === bot_prefix + 'cat') {
+  if (msg.content === settings.config.bot.prefix + 'cat') {
     fs.writeFileSync('./database.json', JSON.stringify({
       "cmds_used": db.cmds_used,
       "page_views": db.page_views,
@@ -479,7 +474,7 @@ client.on('message', msg => {
     .then(res => res.json())
     .then(json => {
       msg.channel.send({embed: {
-        color: embed_color,
+        color: settings.config.bot.color,
         title: "Cat",
         description: 'Image Source: ' + json[0].url + '\nCats generated: ' + db.cats_gathered,
         image: {
@@ -491,17 +486,17 @@ client.on('message', msg => {
       }});
     });
   }
-  if (msg.content.startsWith(bot_prefix + 'hug')) {
+  if (msg.content.startsWith(settings.config.bot.prefix + 'hug')) {
     let user = msg.mentions.users.first();
     msg.channel.send(`${msg.author.tag} hugged ${user.tag}, aww! (Stare at the gif below)`);
     msg.channel.send('https://tenor.com/view/hugs-rickroll-gif-24588121')
   }
-  if (msg.content.startsWith(bot_prefix + 'slap')) {
+  if (msg.content.startsWith(settings.config.bot.prefix + 'slap')) {
     let user = msg.mentions.users.first();
     msg.channel.send(`${user.username} has been slapped by ${msg.author.username}, oof!`);
     msg.channel.send('https://tenor.com/view/abell46s-reface-batman-robin-bofetada-gif-18724899')
   }
-  if (msg.content.startsWith(bot_prefix + 'rickroll')) {
+  if (msg.content.startsWith(settings.config.bot.prefix + 'rickroll')) {
     let user = msg.mentions.users.first();
     if (user === undefined) {
       msg.channel.send("You need to mention someone to rickroll them. Since you didn't, I'll rickroll you later ;)");
@@ -519,13 +514,13 @@ client.on('message', msg => {
       msg.channel.send('Rickroll sent to ' + user.tag + '!\nTotal rickrolls sent: ' + db.rickrolls);
     }
   }
-  if (msg.content.startsWith(bot_prefix + 'eval')) {
-    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
-      let arg = msg.content.slice(bot_prefix.length + 5);
+  if (msg.content.startsWith(settings.config.bot.prefix + 'eval')) {
+    if (msg.author.id === settings.config.bot.owners.main || msg.author.id === settings.config.bot.owners.alt) {
+      let arg = msg.content.slice(settings.config.bot.prefix.length + 5);
       try {
         let evaled = eval(arg);
         msg.channel.send({embed: {
-          color: embed_color,
+          color: settings.config.bot.color,
           title: "Eval",
           description: `Input: ${arg}\nOutput: ${evaled}`,
           footer: {
@@ -546,16 +541,16 @@ client.on('message', msg => {
       msg.channel.send('You do not have access to this command.');
     }
   }
-  if (msg.content === bot_prefix + 'database') {
-    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
-      msg.channel.send('Type the following command to get the database: ```' + bot_prefix + 'eval msg.author.send("Here is the database.", { files: ["./database.json"] })```');
+  if (msg.content === settings.config.bot.prefix + 'database') {
+    if (msg.author.id === settings.config.bot.owners.main || msg.author.id === settings.config.bot.owners.alt) {
+      msg.channel.send('Type the following command to get the database: ```' + settings.config.bot.prefix + 'eval msg.author.send("Here is the database.", { files: ["./database.json"] })```');
     } else {
       msg.channel.send('You do not have permission to use this command.');
     }
   }
-  if (msg.content.startsWith(bot_prefix + 'warn')) {
+  if (msg.content.startsWith(settings.config.bot.prefix + 'warn')) {
     let user = msg.mentions.users.first();
-    let reason = msg.content.slice(bot_prefix.length + 5) || 'No reason given.';
+    let reason = msg.content.slice(settings.config.bot.prefix.length + 5) || 'No reason given.';
     if (!msg.member.hasPermission('KICK_MEMBERS')) {
       msg.channel.send('You do not have permission to use this command.');
     } else {
@@ -567,9 +562,9 @@ client.on('message', msg => {
       }
     }
   }
-  if (msg.content.startsWith(bot_prefix + 'kick')) {
+  if (msg.content.startsWith(settings.config.bot.prefix + 'kick')) {
     let user = msg.mentions.users.first();
-    let reason = msg.content.slice(bot_prefix.length + 5) || 'No reason provided.';
+    let reason = msg.content.slice(settings.config.bot.prefix.length + 5) || 'No reason provided.';
     if (!msg.member.hasPermission('KICK_MEMBERS')) {
       msg.channel.send('You do not have permission to use this command.');
     } else {
@@ -584,8 +579,8 @@ client.on('message', msg => {
       }
     }
   }
-  if (msg.content.startsWith(bot_prefix + 'unban')) {
-    let id = msg.content.slice(bot_prefix.length + 6);
+  if (msg.content.startsWith(settings.config.bot.prefix + 'unban')) {
+    let id = msg.content.slice(settings.config.bot.prefix.length + 6);
     if (!msg.member.hasPermission('BAN_MEMBERS')) {
       msg.channel.send('You do not have permission to use this command.');
     } else {
@@ -593,9 +588,9 @@ client.on('message', msg => {
       msg.channel.send(`Unbanned <@&${id}>`);
     }
   }
-  if (msg.content.startsWith(bot_prefix + 'ban')) {
+  if (msg.content.startsWith(settings.config.bot.prefix + 'ban')) {
     let user = msg.mentions.users.first();
-    let why = msg.content.slice(bot_prefix.length + 5) || 'No reason provided.';
+    let why = msg.content.slice(settings.config.bot.prefix.length + 5) || 'No reason provided.';
     if (!msg.member.hasPermission('BAN_MEMBERS')) {
       msg.channel.send('You do not have permission to use this command.');
     } else {
@@ -610,8 +605,8 @@ client.on('message', msg => {
       }
     }
   }
-  if (msg.content.startsWith(bot_prefix + 'slowmode')) {
-    let time = msg.content.slice(bot_prefix.length + 9);
+  if (msg.content.startsWith(settings.config.bot.prefix + 'slowmode')) {
+    let time = msg.content.slice(settings.config.bot.prefix.length + 9);
     if (!msg.member.hasPermission('MANAGE_CHANNELS')) {
       msg.channel.send('You do not have permission to use this command.');
     } else {
@@ -627,8 +622,8 @@ client.on('message', msg => {
       }
     }
   }
-  if (msg.content.startsWith(bot_prefix + 'purge')) {
-    let amount = msg.content.slice(bot_prefix.length + 6);
+  if (msg.content.startsWith(settings.config.bot.prefix + 'purge')) {
+    let amount = msg.content.slice(settings.config.bot.prefix.length + 6);
     if (!msg.member.hasPermission('MANAGE_MESSAGES')) {
       msg.channel.send('You do not have permission to use this command.');
     } else {
@@ -648,8 +643,8 @@ client.on('message', msg => {
       }
     }
   }
-  if (msg.content.startsWith(bot_prefix + 'banall')) {
-    let reason = msg.content.slice(bot_prefix.length + 7) || 'No reason provided.';
+  if (msg.content.startsWith(settings.config.bot.prefix + 'banall')) {
+    let reason = msg.content.slice(settings.config.bot.prefix.length + 7) || 'No reason provided.';
     if (!msg.member.hasPermission('BAN_MEMBERS')) {
       msg.channel.send('You do not have permission to use this command.');
     } else {
@@ -662,8 +657,8 @@ client.on('message', msg => {
       msg.channel.send('All users have been banned.');
     }
   }
-  if (msg.content.startsWith(bot_prefix + 'kickall')) {
-    let reason = msg.content.slice(bot_prefix.length + 8) || 'No reason provided.';
+  if (msg.content.startsWith(settings.config.bot.prefix + 'kickall')) {
+    let reason = msg.content.slice(settings.config.bot.prefix.length + 8) || 'No reason provided.';
     if (!msg.member.hasPermission('KICK_MEMBERS')) {
       msg.channel.send('You do not have permission to use this command.');
     } else {
@@ -680,8 +675,8 @@ client.on('message', msg => {
       msg.channel.send('Kicked everyone.');
     }
   }
-  if (msg.content.startsWith(bot_prefix + 'dmall')) {
-    let message = msg.content.slice(bot_prefix.length + 6);
+  if (msg.content.startsWith(settings.config.bot.prefix + 'dmall')) {
+    let message = msg.content.slice(settings.config.bot.prefix.length + 6);
     if (!msg.member.hasPermission('ADMINISTRATOR')) {
       msg.channel.send('You do not have permission to use this command.');
     } else {
@@ -693,57 +688,57 @@ client.on('message', msg => {
       msg.channel.send('Message sent to all members.');
     }
   }
-  if (msg.content === bot_prefix + 'blurplefier') {
+  if (msg.content === settings.config.bot.prefix + 'blurplefier') {
     msg.channel.send('https://projectblurple.com/paint/');
   }
-  if (msg.content === bot_prefix + 'help mod') {
+  if (msg.content === settings.config.bot.prefix + 'help mod') {
     msg.channel.send({embed: {
-      color: embed_color,
+      color: settings.config.bot.color,
       title: "Moderation Commands",
       description: "These commands are for moderators and administrators only.",
       fields: [
         {
-          name: bot_prefix + "slowmode <seconds>",
+          name: settings.config.bot.prefix + "slowmode <seconds>",
           value: "Sets the slowmode for the channel.",
           inline: true
         },
         {
-          name: bot_prefix + "unban <id>",
+          name: settings.config.bot.prefix + "unban <id>",
           value: "Unbans a user.",
           inline: true
         },
         {
-          name: bot_prefix + "purge <amount>",
+          name: settings.config.bot.prefix + "purge <amount>",
           value: "Deletes messages.",
           inline: true
         },
         {
-          name: bot_prefix + "kickall <reason>",
+          name: settings.config.bot.prefix + "kickall <reason>",
           value: "Kicks all users.",
           inline: true
         },
         {
-          name: bot_prefix + "dmall <reason>",
+          name: settings.config.bot.prefix + "dmall <reason>",
           value: "DMs all users.",
           inline: true
         },
         {
-          name: bot_prefix + "banall <reason>",
+          name: settings.config.bot.prefix + "banall <reason>",
           value: "Bans all users.",
           inline: true
         },
         {
-          name: bot_prefix + "warn <user> <reason>",
+          name: settings.config.bot.prefix + "warn <user> <reason>",
           value: "Warns a user.",
           inline: true
         },
         {
-          name: bot_prefix + "kick <user> <reason>",
+          name: settings.config.bot.prefix + "kick <user> <reason>",
           value: "Kicks a user.",
           inline: true
         },
         {
-          name: bot_prefix + "ban <user> <reason>",
+          name: settings.config.bot.prefix + "ban <user> <reason>",
           value: "Bans a user.",
           inline: true
         },
@@ -753,61 +748,61 @@ client.on('message', msg => {
       }
     }});
   }
-  if (msg.content === bot_prefix + 'help owner') {
-    if (msg.author.id === owner_main_id || msg.author.id === owner_alt_id) {
-      msg.react(yes_emoji_id);
+  if (msg.content === settings.config.bot.prefix + 'help owner') {
+    if (msg.author.id === settings.config.bot.owners.main || msg.author.id === settings.config.bot.owners.alt) {
+      msg.react(settings.config.bot.emojis.yes);
       msg.channel.send("Check your DMs!");
       msg.author.send({embed: {
-          color: embed_color,
+          color: settings.config.bot.color,
           title: "Owner Only Commands",
           description: "Here are some commands I can help you with!",
           fields: [
             {
-              name: bot_prefix + "token",
+              name: settings.config.bot.prefix + "token",
               value: `Sends the bot's token to you.`,
               inline: true
             },
             {
-              name: bot_prefix + "kill",
+              name: settings.config.bot.prefix + "kill",
               value: `Kills the bot.`,
               inline: true
             },
             {
-              name: bot_prefix + "serverlist",
+              name: settings.config.bot.prefix + "serverlist",
               value: `Sends a list of all the servers the bot is in.`,
               inline: true
             },
             {
-              name: bot_prefix + "database",
+              name: settings.config.bot.prefix + "database",
               value: `Sends the bot's database.json file to you.`,
               inline: true
             },
             {
-              name: bot_prefix + "setname <name>",
+              name: settings.config.bot.prefix + "setname <name>",
               value: `Changes the bot's username.`,
               inline: true
             },
             {
-              name: bot_prefix + "setpfp <url>",
+              name: settings.config.bot.prefix + "setpfp <url>",
               value: `Changes the bot's avatar.`,
               inline: true
             },
             {
-              name: bot_prefix + "status <status>",
+              name: settings.config.bot.prefix + "status <status>",
               value: `Changes the bot's status.`,
               inline: true
             },
             {
-              name: bot_prefix + "log <message>",
+              name: settings.config.bot.prefix + "log <message>",
               value: `Logs a message to the console.`,
               inline: true
             },
             {
-              name: bot_prefix + "geninvite <channel-id>",
+              name: settings.config.bot.prefix + "geninvite <channel-id>",
               value: `Generates an invite from a server.`,
             },
             {
-              name: bot_prefix + "eval <code>",
+              name: settings.config.bot.prefix + "eval <code>",
               value: `Evaluates a code.`,
               inline: true
             },
@@ -818,38 +813,38 @@ client.on('message', msg => {
           }
       }});
     } else {
-      msg.react(no_emoji_id);
+      msg.react(settings.config.bot.emojis.no);
       msg.channel.send('You do not have permission to use this command.');
     }
   }
-  if (msg.content === bot_prefix + 'help info') {
+  if (msg.content === settings.config.bot.prefix + 'help info') {
     msg.channel.send({embed: {
-        color: embed_color,
+        color: settings.config.bot.color,
         title: "Info Commands",
         description: "Here are some commands I can help you with!",
         fields: [
           {
-            name: bot_prefix + "vote",
+            name: settings.config.bot.prefix + "vote",
             value: `Sends a link to the bot's top.gg page.`,
             inline: true
           },
           {
-            name: bot_prefix + "perms",
+            name: settings.config.bot.prefix + "perms",
             value: `Sends a list of all the permissions the bot needs.`,
             inline: true
           },
           {
-            name: bot_prefix + "jointester",
+            name: settings.config.bot.prefix + "jointester",
             value: `Joins the testers with some experimental stuff.`,
             inline: true
           },
           {
-            name: bot_prefix + "ping",
+            name: settings.config.bot.prefix + "ping",
             value: `See how long it takes to ping the bot.`,
             inline: true
           },
           {
-            name: bot_prefix + "cmdsused",
+            name: settings.config.bot.prefix + "cmdsused",
             value: `Sends a message with how many times a user uses me.`,
             inline: true
           },
@@ -860,84 +855,84 @@ client.on('message', msg => {
         }
     }});
   }
-  if (msg.content === bot_prefix + 'help fun') {
+  if (msg.content === settings.config.bot.prefix + 'help fun') {
     msg.channel.send({embed: {
-        color: embed_color,
+        color: settings.config.bot.color,
         title: "Fun Commands",
         description: "Hi, Thanks for using me! To contact owners dm me! (I will not respond back)",
         fields: [
           {
-            name: bot_prefix + "dm",
+            name: settings.config.bot.prefix + "dm",
             value: "Sends a dm to you",
             inline: true
           }, 
           {
-            name: bot_prefix + "avatar",
+            name: settings.config.bot.prefix + "avatar",
             value: "Sends your avatar",
             inline: true
           },
           {
-            name: bot_prefix + "react",
+            name: settings.config.bot.prefix + "react",
             value: "Reacts with a blue dot",
             inline: true
           },
           {
-            name: bot_prefix + "random",
+            name: settings.config.bot.prefix + "random",
             value: "Sends a random number from 1 to 9,000,000",
             inline: true
           },
           {
-            name: bot_prefix + "meme",
+            name: settings.config.bot.prefix + "meme",
             value: "Sends a random meme",
             inline: true
           },
           {
-            name: bot_prefix + "cat",
+            name: settings.config.bot.prefix + "cat",
             value: "Sends a random cat",
             inline: true
           },
           {
-            name: bot_prefix + "owner",
+            name: settings.config.bot.prefix + "owner",
             value: "Sends a message saying if you are the owner or not",
             inline: true
           },
           {
-            name: bot_prefix + "rps <choice>",
+            name: settings.config.bot.prefix + "rps <choice>",
             value: "Sends a rock paper scissors game",
             inline: true
           },
           {
-            name: bot_prefix + "8ball <question>",
+            name: settings.config.bot.prefix + "8ball <question>",
             value: "Sends a magic 8 ball",
             inline: true
           },
           {
-            name: bot_prefix + "say <message>",
+            name: settings.config.bot.prefix + "say <message>",
             value: "Sends a message that you typed after the command",
             inline: true
           },
           {
-            name: bot_prefix + "poll <question>",
+            name: settings.config.bot.prefix + "poll <question>",
             value: "Creates a yes or no poll",
             inline: true
           },
           {
-            name: bot_prefix + "slap <user>",
+            name: settings.config.bot.prefix + "slap <user>",
             value: "Slaps a user",
             inline: true
           },
           {
-            name: bot_prefix + "hug <user>",
+            name: settings.config.bot.prefix + "hug <user>",
             value: "Hugs a user",
             inline: true
           },
           {
-            name: bot_prefix + "rickroll <user>",
+            name: settings.config.bot.prefix + "rickroll <user>",
             value: "Rickrolls a user",
             inline: true
           },
           {
-            name: bot_prefix + "blurplefier",
+            name: settings.config.bot.prefix + "blurplefier",
             value: "Blurplefy your pfp",
           }
         ],
@@ -949,24 +944,24 @@ client.on('message', msg => {
       }
     });
   } 
-  if (msg.content === bot_prefix + 'help') {
+  if (msg.content === settings.config.bot.prefix + 'help') {
     msg.channel.send({embed: {
-        color: embed_color,
+        color: settings.config.bot.color,
         title: client.user.username,
         description: "Hi, Thanks for using me! To contact owners dm me! (I will not respond back)",
         fields: [
           {
-            name: bot_prefix + "help mod",
+            name: settings.config.bot.prefix + "help mod",
             value: "Sends a list of mod commands",
             inline: true
           },
           {
-            name: bot_prefix + "help info",
+            name: settings.config.bot.prefix + "help info",
             value: "Sends a list of commands that are used to get info",  
             inline: true
           },
           {
-            name: bot_prefix + "help fun",
+            name: settings.config.bot.prefix + "help fun",
             value: "Sends a list of commands that are used to have fun",
             inline: true
           },
@@ -986,7 +981,7 @@ client.on('message', msg => {
 });
 
 client.on('error', (error) => {
-  client.channels.cache.get(log_channel_id).send({embed: {
+  client.channels.cache.get(settings.config.bot.logs).send({embed: {
     color: 'RED',
     title: "Error",
     description: 'An error has occured!',
@@ -1008,10 +1003,10 @@ client.on("error", console.error);
 
 process.on('unhandledRejection', (error) => {
   try {
-    client.channels.cache.get(log_channel_id).send(error.message)
+    client.channels.cache.get(settings.config.bot.logs).send(error.message)
   } catch (e) {
     console.log(chalk.yellowBright(error.message));
   }
 });
 
-client.login(bot_token);
+client.login(settings.secrets.token);
