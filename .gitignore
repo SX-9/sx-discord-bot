@@ -5,5 +5,4 @@ package-lock.json
 database.json
 .vscode
 .npm
-conf.json
-secrets.json
+settings.json

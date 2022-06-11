@@ -13,7 +13,9 @@
     "url": "git+https://github.com/SX-9/sx-discord-bot.git"
   },
   "keywords": [
-    "discord"
+    "discord",
+    "bot",
+    "js"
   ],
   "author": "SX Spy Agent",
   "license": "ISC",

@@ -36,7 +36,7 @@ pattern = "**/{*.js,*.jsx,*.ts,*.tsx}"
 support = true
 
   [debugger.interactive]
-  transport = "localhost:0"
+  transport = "localhost:3000"
   startCommand = [ "npm run shard" ]
 
     [debugger.interactive.initializeMessage]
