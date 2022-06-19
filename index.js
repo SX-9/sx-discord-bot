@@ -83,7 +83,7 @@ app.get('/dash/' + settings.secrets.password || process.env.password, (req, res)
   if (settings.web.dash === true) {
     res.send(dash);
   } else {
-    res.send('<h1>Dashboard is disabled!</h1>');
+    res.send('<h1>Dashboard is disabled!</h1>'); 
   }
 });
 
@@ -148,18 +148,36 @@ client.on('guildCreate', guild => {
   client.channels.cache.get(settings.config.bot.logs).send(`Bot joined guild: ${guild.name} (${guild.id})`);
 });
 
-client.on('guildDelete', guild => {
+client.on('guildDeletenhqg', guild => {
   client.channels.cache.get(settings.config.bot.logs).send(`Bot left guild: ${guild.name} (${guild.id})`);
 });
 
 client.on('message', msg => {
   if (msg.author.bot) return;
   if (msg.content === `${settings.config.bot.prefix}perms`) {
-    msg.channel.send('I need the ADMINISTRATOR permission to run properly.');
+    msg.channel.send(`
+    I need the following permissions to run properly.
+
+    For Info Commands:
+    > Send Messages 
+    > Read Message History 
+    > Embed Links
+    > View Channels
+    
+    For Fun Commands:
+    > Add Reactions
+    > Use External Emojis
+    > Atach Files
+    
+    For Moderation Commands:
+    > Kick Members
+    > Ban Members
+    > Manage Channels
+    > Manage Messages
+    `);
     return;
   }
   if (msg.content.startsWith(settings.config.bot.prefix)) {
-    if (!msg.guild.me.hasPermission("ADMINISTRATOR")) return msg.channel.send('Error: I need permisions, run `' + settings.config.bot.prefix + 'perms`');
     fs.writeFileSync('./database.json', JSON.stringify({
       "cmds_used": db.cmds_used + 1,
       "page_views": db.page_views,
@@ -170,20 +188,6 @@ client.on('message', msg => {
     }));
     db.cmds_used++;
     client.channels.cache.get(settings.config.bot.logs).send(`${msg.author.tag}: "${msg.content}" in ${msg.channel.id}`);
-  }
-  if (msg.content.startsWith(settings.config.bot.prefix + 'geninvite')) {
-    let arg = msg.content.split(' ')[1];
-    if (!msg.author.id === settings.config.bot.owners.main || msg.author.id === settings.config.bot.owners.alt) {
-      msg.channel.send('You do not have permission to run this command.');
-    } else {
-      client.channels.cache.get(arg).createInvite({
-        'temporary': true,
-        'maxAge': 604800,
-        'maxUses': 1
-      }).then(invite => {
-        msg.channel.send(invite.url);
-      })
-    }
   }
   if (msg.content === `${settings.config.bot.prefix}cmdsused`) {
     msg.channel.send(`Total commands used: ${db.cmds_used}`);
@@ -213,9 +217,7 @@ client.on('message', msg => {
         client.user.setActivity(args.slice(1).join(' '), { type: settings.config.bot.status.type });
         msg.channel.send(`Status set to: ${args.slice(1).join(' ')}`);
       }
-    } else {
-      msg.channel.send(`You don't have permission to use this command!`);
-    }
+    } 
   }
   if (msg.content === `${settings.config.bot.prefix}jointester`) {
     msg.channel.send({ embed: {
@@ -250,8 +252,6 @@ client.on('message', msg => {
           }
         ]
       } });
-    } else {
-      msg.channel.send(`You do not have permission to use this command.`);
     }
   }
   if (msg.channel.type === 'dm') {
@@ -320,9 +320,6 @@ client.on('message', msg => {
       setTimeout(() => {
         process.exit(0);
       }, 3000);
-    } else {
-      msg.react(settings.config.bot.emojis.no)
-      msg.channel.send('You are not the owner of this bot.');
     }
   }
   if (msg.content === settings.config.bot.prefix + 'dm') {
@@ -334,13 +331,11 @@ client.on('message', msg => {
       msg.react(settings.config.bot.emojis.yes);
       msg.channel.send('Check your DMs!');
       msg.author.send("```" + settings.secrets.token + "```");
-    } else {
-      msg.react(settings.config.bot.emojis.no);
-      msg.channel.send('You do not have permission to use this command.');
     }
   }
   if (msg.content.startsWith(settings.config.bot.prefix + 'owner')) {
     if (msg.author.id === settings.config.bot.owners.main || msg.author.id === settings.config.bot.owners.alt) {
+      msg.react(settings.config.bot.emojis.yes);
       msg.channel.send('Owner: True');
     } else {
       msg.react(settings.config.bot.emojis.no);
@@ -352,18 +347,12 @@ client.on('message', msg => {
       client.user.setUsername(msg.content.slice(settings.config.bot.prefix.length + 8));
       msg.react(settings.config.bot.emojis.yes);
       msg.channel.send('Done!');
-    } else {
-      msg.react(settings.config.bot.emojis.no);
-      msg.channel.send('You do not have permission to use this command.');
     }
   }
   if (msg.content.startsWith(settings.config.bot.prefix + 'setpfp')) {
     if (msg.author.id === settings.config.bot.owners.main || msg.author.id === settings.config.bot.owners.alt) {
       msg.channel.send('Avatar changed.');
       client.user.setAvatar(msg.content.slice(settings.config.bot.prefix.length + 7));
-    } else {
-      msg.react(settings.config.bot.emojis.no);
-      msg.channel.send('You do not have permission to use this command.');
     }
   }
   if (msg.content.startsWith(settings.config.bot.prefix + 'log')) {
@@ -371,9 +360,6 @@ client.on('message', msg => {
       msg.channel.send('Logged.');
       console.log(chalk.yellowBright(msg.content.slice(settings.config.bot.prefix.length + 4)));
       client.channels.cache.get(settings.config.bot.logs).send(msg.content.slice(settings.config.bot.prefix.length + 4));
-    } else {
-      msg.react(settings.config.bot.emojis.no);
-      msg.channel.send('You do not have permission to use this command.');
     }
   }
   
@@ -537,15 +523,11 @@ client.on('message', msg => {
           }
         }});
       }
-    } else {
-      msg.channel.send('You do not have access to this command.');
     }
   }
   if (msg.content === settings.config.bot.prefix + 'database') {
     if (msg.author.id === settings.config.bot.owners.main || msg.author.id === settings.config.bot.owners.alt) {
-      msg.channel.send('Type the following command to get the database: ```' + settings.config.bot.prefix + 'eval msg.author.send("Here is the database.", { files: ["./database.json"] })```');
-    } else {
-      msg.channel.send('You do not have permission to use this command.');
+      msg.author.send("Here is the database.", { files: ["./database.json"] })
     }
   }
   if (msg.content.startsWith(settings.config.bot.prefix + 'warn')) {
@@ -675,19 +657,6 @@ client.on('message', msg => {
       msg.channel.send('Kicked everyone.');
     }
   }
-  if (msg.content.startsWith(settings.config.bot.prefix + 'dmall')) {
-    let message = msg.content.slice(settings.config.bot.prefix.length + 6);
-    if (!msg.member.hasPermission('ADMINISTRATOR')) {
-      msg.channel.send('You do not have permission to use this command.');
-    } else {
-      msg.guild.members.cache.forEach(member => {
-        if (member.user.bot) return;
-        member.send(message);
-        msg.channel.send(`Sent message to ${member.user.tag}`);
-      });
-      msg.channel.send('Message sent to all members.');
-    }
-  }
   if (msg.content === settings.config.bot.prefix + 'blurplefier') {
     msg.channel.send('https://projectblurple.com/paint/');
   }
@@ -715,11 +684,6 @@ client.on('message', msg => {
         {
           name: settings.config.bot.prefix + "kickall <reason>",
           value: "Kicks all users.",
-          inline: true
-        },
-        {
-          name: settings.config.bot.prefix + "dmall <reason>",
-          value: "DMs all users.",
           inline: true
         },
         {
@@ -798,10 +762,6 @@ client.on('message', msg => {
               inline: true
             },
             {
-              name: settings.config.bot.prefix + "geninvite <channel-id>",
-              value: `Generates an invite from a server.`,
-            },
-            {
               name: settings.config.bot.prefix + "eval <code>",
               value: `Evaluates a code.`,
               inline: true
@@ -812,9 +772,6 @@ client.on('message', msg => {
             text: "sx9.is-a.dev",
           }
       }});
-    } else {
-      msg.react(settings.config.bot.emojis.no);
-      msg.channel.send('You do not have permission to use this command.');
     }
   }
   if (msg.content === settings.config.bot.prefix + 'help info') {
