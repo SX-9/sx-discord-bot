@@ -35,7 +35,7 @@ if (!fs.existsSync('./settings.json')) {
     },
     "config": {
         "bot": {
-            "prefix": "sx!",
+            "prefix": "dot!",
             "shards": 200,
             "color": "#00e1ff",
             "logs": "963713518966808587",
@@ -49,7 +49,7 @@ if (!fs.existsSync('./settings.json')) {
                 "random": "975216920955596880"
             },
             "status": {
-                "text": "sx!help | cat.sx9.is-a.dev",
+                "text": "dot!help | cat.sx9.is-a.dev",
                 "type": "LISTENING"
             }
         },
