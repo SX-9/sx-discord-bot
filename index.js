@@ -28,7 +28,7 @@ if (!fs.existsSync('./database.json')) {
 
 if (!fs.existsSync('./settings.json')) {
   console.log(chalk.yellowBright('Not found settings.json, creating...'));
-  fs.writeFileSync('./settings.json', JSON.stringify({
+  fs.writeFileSync('./settings.json', `
     "secrets": {
         "token": "",
         "password": ""
@@ -58,7 +58,7 @@ if (!fs.existsSync('./settings.json')) {
             "dash": true
         }
     }
-  }));
+  `);
   console.log(chalk.redBright('Go to settings.json and add your prefix, owner id, log channel id, and other stuff.'));
   process.exit();
 } else {
@@ -71,19 +71,22 @@ const db = require('./database.json');
 app.enable("trust proxy");
 app.set('etag', false);
 app.use(require('express').static(__dirname + './'));
+app.use(require('express').json());
 
 app.use((req, res, next) => {
-  console.log(chalk.blueBright(`${req.method}: ${req.url} from ${req.ip}`));
+  console.log(chalk.blueBright(`${req.method}: ${req.url}`));
   next();
 });
 
-app.get('/dash/' + settings.secrets.password || process.env.password, (req, res) => {
-  let dash = fs.readFileSync('./dash.html', { encoding: 'utf8' });
-  dash = dash.replace('$$username$$', client.user.username);
-  if (settings.web.dash === true) {
-    res.send(dash);
+app.post('/dash/:pass', (req, res) => {
+  if (settings.web.dash) {
+    if (req.params.pass === settings.secrets.password || process.env.password) {
+      res.json(eval(req.body.code));
+    } else {
+      res.json({ "mess": "Invalid password" });
+    }
   } else {
-    res.send('<h1>Dashboard is disabled!</h1>'); 
+    res.json({ "mess": "Dashboard is disabled" });
   }
 });
 
