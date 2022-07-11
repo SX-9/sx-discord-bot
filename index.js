@@ -81,7 +81,11 @@ app.use((req, res, next) => {
 app.post('/dash/:pass', (req, res) => {
   if (settings.web.dash) {
     if (req.params.pass === settings.secrets.password || process.env.password) {
-      res.json(eval(req.body.code));
+      try {
+        res.json({ "messs": eval(req.body.code) });
+      } catch (e) {
+        res.json({ "messs": e.toString() });
+      }
     } else {
       res.json({ "mess": "Invalid password" });
     }
